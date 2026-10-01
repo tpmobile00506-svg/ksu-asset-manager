@@ -419,7 +419,7 @@ export default function StocktakesView({
                         <div>
                           <span className="text-slate-400 text-[10.5px] block">ในระบบ / พบจริง</span>
                           <span className="font-semibold text-slate-800">
-                            {snap.quantity ?? 1} / <strong className="text-blue-700">{i.quantity ?? '—'}</strong> หน่วย
+                            {snap.quantity ?? 1} / <strong className="text-blue-700">{i.quantity ?? '—'}</strong> ชิ้น
                           </span>
                         </div>
                         <div>

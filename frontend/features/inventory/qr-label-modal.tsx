@@ -98,7 +98,7 @@ export default function QrLabelModal({
           <img src={x.url} alt={'QR ' + x.a.code} />
           <b>{x.a.code}</b>
           <p>{x.a.name}</p>
-          <p>{x.a.quantity > 1 ? `${x.a.quantity} หน่วย` : '1 หน่วย'}{x.a.location ? ` · ${x.a.location}` : ''}</p>
+          <p>{x.a.quantity > 1 ? `${x.a.quantity} ชิ้น` : '1 ชิ้น'}{x.a.location ? ` · ${x.a.location}` : ''}</p>
         </div>
       ))}
     </div>

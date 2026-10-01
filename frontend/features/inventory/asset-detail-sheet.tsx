@@ -110,7 +110,7 @@ export default function AssetDetailSheet({
             <div className="status-line mt-4">
               <Badge value={selected.condition} />
               <Badge value={selected.lifecycle} />
-              <span className="badge">{selected.quantity} หน่วย</span>
+              <span className="badge">{selected.quantity} ชิ้น</span>
             </div>
 
             <AssetPhoto
@@ -252,7 +252,7 @@ export default function AssetDetailSheet({
                     key={a.id}
                     onClick={() => setSelected(a)}
                   >
-                    {a.code} · {a.quantity} หน่วย · {money(a.totalSatang)} บาท
+                    {a.code} · {a.quantity} ชิ้น · {money(a.totalSatang)} บาท
                   </button>
                 ))}
               </div>

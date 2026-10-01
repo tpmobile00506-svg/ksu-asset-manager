@@ -269,7 +269,7 @@ export default function Editor({
                 {modal?.kind === 'split' && (
                   <>
                     <div className="notice">
-                      จำนวนเดิม {modal.asset.quantity} หน่วย · มูลค่า{' '}
+                      จำนวนเดิม {modal.asset.quantity} ชิ้น · มูลค่า{' '}
                       {money(modal.asset.totalSatang)} บาท · รายการเดิมคงอยู่ในประวัติ
                     </div>
                     <div className="form-grid">
@@ -296,7 +296,7 @@ export default function Editor({
                     <div className="split-preview">
                       <div>
                         <p>ส่วนที่แยก</p>
-                        <b>{take || 0} หน่วย</b>
+                        <b>{take || 0} ชิ้น</b>
                         <p>
                           {Number.isInteger(take) &&
                           take > 0 &&
@@ -314,7 +314,7 @@ export default function Editor({
                       </div>
                       <div>
                         <p>ส่วนที่เหลือ · {statusLabel(modal.asset.condition)}</p>
-                        <b>{Math.max(0, modal.asset.quantity - take)} หน่วย</b>
+                        <b>{Math.max(0, modal.asset.quantity - take)} ชิ้น</b>
                         <p>
                           {Number.isInteger(take) &&
                           take > 0 &&
@@ -351,7 +351,7 @@ export default function Editor({
                         <span className="font-mono text-slate-500 shrink-0">{modal.asset.code}</span>
                       </div>
                       <div className="text-slate-500">
-                        จำนวนทั้งหมด <b>{modal.asset.quantity}</b> หน่วย · สังกัด {modal.asset.branch} {modal.asset.location ? `(${modal.asset.location})` : ''} · มูลค่ารวม {money(modal.asset.totalSatang)} บาท
+                        จำนวนทั้งหมด <b>{modal.asset.quantity}</b> ชิ้น · สังกัด {modal.asset.branch} {modal.asset.location ? `(${modal.asset.location})` : ''} · มูลค่ารวม {money(modal.asset.totalSatang)} บาท
                       </div>
                     </div>
 
@@ -375,7 +375,7 @@ export default function Editor({
                             ขอบเขตจำนวนที่ต้องการยื่นคำขอ
                           </span>
                           <span className="text-[11px] text-slate-500 font-medium">
-                            (มีทั้งหมด {modal.asset.quantity} หน่วย)
+                            (มีทั้งหมด {modal.asset.quantity} ชิ้น)
                           </span>
                         </div>
 
@@ -391,7 +391,7 @@ export default function Editor({
                             />
                             <div>
                               <div>ยื่นคำขอทั้งชุด</div>
-                              <div className="text-[11px] text-slate-500 font-normal">ทั้งหมด {modal.asset.quantity} หน่วย</div>
+                              <div className="text-[11px] text-slate-500 font-normal">ทั้งหมด {modal.asset.quantity} ชิ้น</div>
                             </div>
                           </label>
 
@@ -431,7 +431,7 @@ export default function Editor({
                                   required
                                 />
                                 <span className="text-xs text-slate-600">
-                                  หน่วย (สูงสุด {modal.asset.quantity - 1} หน่วย)
+                                  ชิ้น (สูงสุด {modal.asset.quantity - 1} ชิ้น)
                                 </span>
                               </div>
                             </div>
@@ -439,7 +439,7 @@ export default function Editor({
                             <div className="split-preview !my-1">
                               <div>
                                 <p className="text-blue-700 font-medium">ส่วนที่ยื่นคำขอ ({requestTypes[requestKind as keyof typeof requestTypes] || 'คำขอ'})</p>
-                                <b>{requestSplitTake || 0} หน่วย</b>
+                                <b>{requestSplitTake || 0} ชิ้น</b>
                                 <p className="text-slate-500 text-xs mt-0.5">
                                   {Number.isInteger(requestSplitTake) &&
                                   requestSplitTake > 0 &&
@@ -457,7 +457,7 @@ export default function Editor({
                               </div>
                               <div>
                                 <p className="text-slate-600 font-medium">ส่วนที่คงเหลือในทะเบียน</p>
-                                <b>{Math.max(0, modal.asset.quantity - requestSplitTake)} หน่วย</b>
+                                <b>{Math.max(0, modal.asset.quantity - requestSplitTake)} ชิ้น</b>
                                 <p className="text-slate-500 text-xs mt-0.5">
                                   {Number.isInteger(requestSplitTake) &&
                                   requestSplitTake > 0 &&
@@ -475,7 +475,7 @@ export default function Editor({
                               </div>
                             </div>
                             <p className="text-[11px] text-slate-500 leading-relaxed">
-                              💡 ระบบจะตัดแบ่ง {requestSplitTake} หน่วยส่งเข้าสายอนุมัติ ส่วนที่เหลืออีก {modal.asset.quantity - requestSplitTake} หน่วยจะยังคงถือครองใช้งานตามปกติในทะเบียน
+                              💡 ระบบจะตัดแบ่ง {requestSplitTake} ชิ้นส่งเข้าสายอนุมัติ ส่วนที่เหลืออีก {modal.asset.quantity - requestSplitTake} ชิ้นจะยังคงถือครองใช้งานตามปกติในทะเบียน
                             </p>
                           </div>
                         )}
@@ -569,7 +569,7 @@ export default function Editor({
                       <p className="mono font-mono text-blue-700 font-bold mt-0.5">{modal.item.code}</p>
                       <p className="mt-1 text-slate-600">
                         จำนวนตามทะเบียน ณ วันเปิดรอบ:{' '}
-                        <strong className="text-slate-900">{JSON.parse(modal.item.snapshot).quantity}</strong> หน่วย
+                        <strong className="text-slate-900">{JSON.parse(modal.item.snapshot).quantity}</strong> ชิ้น
                       </p>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -589,7 +589,7 @@ export default function Editor({
                         ]}
                       />
                       <Field
-                        label="จำนวนที่พบจริง (หน่วย)"
+                        label="จำนวนที่พบจริง (ชิ้น)"
                         name="quantity"
                         type="number"
                         min={0}

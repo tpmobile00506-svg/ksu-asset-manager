@@ -490,7 +490,7 @@ export default function AssetFormModal({
                 <div className="form-section-title">จำนวนและมูลค่า</div>
                 <div className="form-grid">
                   <Field
-                    label="จำนวน"
+                    label="จำนวน (ชิ้น)"
                     name="quantity"
                     type="number"
                     value={qtyInput}

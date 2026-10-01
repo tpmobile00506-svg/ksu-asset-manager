@@ -404,7 +404,7 @@ export default function AssetDetailView({
               </div>
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
-                  มูลค่ารวม ({asset.quantity} หน่วย)
+                  มูลค่ารวม ({asset.quantity} ชิ้น)
                 </label>
                 <Input
                   value={`฿${money(asset.totalSatang)}`}
@@ -518,7 +518,7 @@ export default function AssetDetailView({
                       <span className="text-slate-800 font-medium">{child.name}</span>
                     </div>
                     <span className="text-slate-500 font-semibold">
-                      {child.quantity} หน่วย · ฿{money(child.totalSatang)}
+                      {child.quantity} ชิ้น · ฿{money(child.totalSatang)}
                     </span>
                   </button>
                 ))}

@@ -32,22 +32,23 @@ import { Asset, money, conditions } from '@/shared/domain';
 import type { WorkspaceData, AuditRecord } from '@/shared/models';
 import { toast } from 'sonner';
 
-type TabKey = 'all' | 'import' | 'edit' | 'transfer' | 'repair' | 'stocktake' | 'user';
+type TabKey = 'all' | 'stocktake' | 'transfer' | 'repair' | 'dispose' | 'edit' | 'import' | 'user';
 type TimeRange = 'all' | 'today' | '7days' | '30days';
 
 // แมปชื่อฟิลด์ภาษาอังกฤษ -> ภาษาไทย
 const fieldLabels: Record<string, string> = {
   location: 'สถานที่ตั้ง',
-  branch: 'สาขาวิชา',
+  branch: 'สาขาวิชา / หน่วยงาน',
   condition: 'สภาพการใช้งาน',
   custodian: 'ผู้รับผิดชอบ / ผู้ดูแล',
   unitSatang: 'ราคาต่อหน่วย',
   totalSatang: 'มูลค่ารวม',
-  quantity: 'จำนวนหน่วย',
+  quantity: 'จำนวน (ชิ้น)',
   category: 'หมวดหมู่',
   name: 'ชื่อรายการครุภัณฑ์',
   code: 'รหัสครุภัณฑ์',
   serial: 'หมายเลขเครื่อง / Serial No.',
+  brand: 'ยี่ห้อ / รุ่น',
   notes: 'หมายเหตุ',
   receivedDate: 'วันที่ตรวจรับ/ได้มา',
   lifeYears: 'อายุการใช้งานตามเกณฑ์',
@@ -55,6 +56,14 @@ const fieldLabels: Record<string, string> = {
   status: 'สถานะคำขอ',
   role: 'สิทธิ์การใช้งาน (Role)',
   active: 'สถานะบัญชี'
+};
+
+const stocktakeResultMeta: Record<string, { label: string; style: string }> = {
+  normal: { label: 'ตรงตามทะเบียน (ปกติ)', style: 'bg-emerald-100 text-emerald-800 border-emerald-300' },
+  damaged: { label: 'ชำรุด / ส่งซ่อม', style: 'bg-amber-100 text-amber-800 border-amber-300' },
+  missing: { label: 'ไม่พบครุภัณฑ์', style: 'bg-rose-100 text-rose-800 border-rose-300' },
+  mismatch: { label: 'ข้อมูลไม่ตรง', style: 'bg-purple-100 text-purple-800 border-purple-300' },
+  pending: { label: 'รอตรวจนับ', style: 'bg-slate-100 text-slate-700 border-slate-300' }
 };
 
 function formatThaiDateTime(isoStr: string): string {
@@ -96,37 +105,38 @@ function formatRelativeTime(isoStr: string): string {
 
 function getActionMeta(action: string) {
   const a = (action || '').toLowerCase();
-  if (a.includes('import') || a.includes('นำเข้า') || a.includes('excel')) {
+
+  if (a.includes('เปิดรอบตรวจนับ')) {
     return {
-      label: 'นำเข้าข้อมูล',
-      color: 'text-blue-700',
-      bg: 'bg-blue-50',
-      border: 'border-blue-200',
-      badgeBg: 'bg-blue-100/80 text-blue-800 border-blue-200',
-      icon: Upload,
-      kind: 'import' as TabKey
+      label: 'เปิดรอบตรวจนับ',
+      color: 'text-sky-700',
+      bg: 'bg-sky-50',
+      border: 'border-sky-200',
+      badgeBg: 'bg-sky-100/90 text-sky-800 border-sky-300',
+      icon: QrCode,
+      kind: 'stocktake' as TabKey
     };
   }
-  if (a.includes('transfer') || a.includes('โอนย้าย')) {
+  if (a.includes('ปิดรอบตรวจนับ')) {
     return {
-      label: 'โอนย้ายสถานที่',
-      color: 'text-purple-700',
-      bg: 'bg-purple-50',
-      border: 'border-purple-200',
-      badgeBg: 'bg-purple-100/80 text-purple-800 border-purple-200',
-      icon: ArrowLeftRight,
-      kind: 'transfer' as TabKey
+      label: 'ปิดรอบตรวจนับ',
+      color: 'text-slate-700',
+      bg: 'bg-slate-100',
+      border: 'border-slate-300',
+      badgeBg: 'bg-slate-200/90 text-slate-800 border-slate-300',
+      icon: CheckCircle2,
+      kind: 'stocktake' as TabKey
     };
   }
-  if (a.includes('repair') || a.includes('ซ่อม')) {
+  if (a.includes('บันทึกตรวจนับ')) {
     return {
-      label: 'แจ้งส่งซ่อม',
-      color: 'text-orange-700',
-      bg: 'bg-orange-50',
-      border: 'border-orange-200',
-      badgeBg: 'bg-orange-100/80 text-orange-800 border-orange-200',
-      icon: Wrench,
-      kind: 'repair' as TabKey
+      label: 'บันทึกผลตรวจนับ (QR)',
+      color: 'text-sky-700',
+      bg: 'bg-sky-50',
+      border: 'border-sky-200',
+      badgeBg: 'bg-sky-100/90 text-sky-800 border-sky-300',
+      icon: QrCode,
+      kind: 'stocktake' as TabKey
     };
   }
   if (a.includes('check') || a.includes('ตรวจนับ') || a.includes('round')) {
@@ -140,15 +150,92 @@ function getActionMeta(action: string) {
       kind: 'stocktake' as TabKey
     };
   }
-  if (a.includes('user') || a.includes('ผู้ใช้') || a.includes('สิทธิ์')) {
+  if (a.includes('อนุมัติ')) {
     return {
-      label: 'จัดการผู้ใช้งาน',
+      label: 'อนุมัติคำขอ',
       color: 'text-emerald-700',
       bg: 'bg-emerald-50',
       border: 'border-emerald-200',
-      badgeBg: 'bg-emerald-100/80 text-emerald-800 border-emerald-200',
-      icon: ShieldCheck,
-      kind: 'user' as TabKey
+      badgeBg: 'bg-emerald-100/90 text-emerald-800 border-emerald-300',
+      icon: CheckCircle2,
+      kind: 'transfer' as TabKey
+    };
+  }
+  if (a.includes('ส่งคำขอกลับ') || a.includes('ปฏิเสธ')) {
+    return {
+      label: 'ส่งคำขอกลับ',
+      color: 'text-rose-700',
+      bg: 'bg-rose-50',
+      border: 'border-rose-200',
+      badgeBg: 'bg-rose-100/90 text-rose-800 border-rose-300',
+      icon: AlertTriangle,
+      kind: 'transfer' as TabKey
+    };
+  }
+  if (a.includes('ส่งคำขอ') || a.includes('ดำเนินการ')) {
+    if (a.includes('ซ่อม')) {
+      return {
+        label: a.includes('ดำเนินการ') ? 'ส่งซ่อมสำเร็จ' : 'ส่งคำขอส่งซ่อม',
+        color: 'text-orange-700',
+        bg: 'bg-orange-50',
+        border: 'border-orange-200',
+        badgeBg: 'bg-orange-100/90 text-orange-800 border-orange-300',
+        icon: Wrench,
+        kind: 'repair' as TabKey
+      };
+    }
+    if (a.includes('จำหน่าย')) {
+      return {
+        label: a.includes('ดำเนินการ') ? 'จำหน่ายสำเร็จ' : 'ส่งคำขอจำหน่าย',
+        color: 'text-rose-700',
+        bg: 'bg-rose-50',
+        border: 'border-rose-200',
+        badgeBg: 'bg-rose-100/90 text-rose-800 border-rose-300',
+        icon: Trash2,
+        kind: 'dispose' as TabKey
+      };
+    }
+    return {
+      label: a.includes('ดำเนินการ') ? 'โอนย้ายสำเร็จ' : 'ส่งคำขอโอนย้าย',
+      color: 'text-purple-700',
+      bg: 'bg-purple-50',
+      border: 'border-purple-200',
+      badgeBg: 'bg-purple-100/90 text-purple-800 border-purple-300',
+      icon: ArrowLeftRight,
+      kind: 'transfer' as TabKey
+    };
+  }
+  if (a.includes('ซ่อมเสร็จ')) {
+    return {
+      label: 'ซ่อมเสร็จสิ้น',
+      color: 'text-emerald-700',
+      bg: 'bg-emerald-50',
+      border: 'border-emerald-200',
+      badgeBg: 'bg-emerald-100/90 text-emerald-800 border-emerald-300',
+      icon: CheckCircle2,
+      kind: 'repair' as TabKey
+    };
+  }
+  if (a.includes('repair') || a.includes('ซ่อม')) {
+    return {
+      label: 'แจ้งส่งซ่อม',
+      color: 'text-orange-700',
+      bg: 'bg-orange-50',
+      border: 'border-orange-200',
+      badgeBg: 'bg-orange-100/80 text-orange-800 border-orange-200',
+      icon: Wrench,
+      kind: 'repair' as TabKey
+    };
+  }
+  if (a.includes('transfer') || a.includes('โอนย้าย')) {
+    return {
+      label: 'โอนย้ายสถานที่',
+      color: 'text-purple-700',
+      bg: 'bg-purple-50',
+      border: 'border-purple-200',
+      badgeBg: 'bg-purple-100/80 text-purple-800 border-purple-200',
+      icon: ArrowLeftRight,
+      kind: 'transfer' as TabKey
     };
   }
   if (a.includes('dispose') || a.includes('จำหน่าย')) {
@@ -159,7 +246,51 @@ function getActionMeta(action: string) {
       border: 'border-rose-200',
       badgeBg: 'bg-rose-100/80 text-rose-800 border-rose-200',
       icon: Trash2,
-      kind: 'other' as TabKey
+      kind: 'dispose' as TabKey
+    };
+  }
+  if (a.includes('import') || a.includes('นำเข้า') || a.includes('excel')) {
+    return {
+      label: 'นำเข้าข้อมูล',
+      color: 'text-blue-700',
+      bg: 'bg-blue-50',
+      border: 'border-blue-200',
+      badgeBg: 'bg-blue-100/80 text-blue-800 border-blue-200',
+      icon: Upload,
+      kind: 'import' as TabKey
+    };
+  }
+  if (a.includes('user') || a.includes('ผู้ใช้') || a.includes('สิทธิ์') || a.includes('สายอนุมัติ')) {
+    return {
+      label: a.includes('สายอนุมัติ') ? 'กำหนดสายอนุมัติ' : 'จัดการผู้ใช้งาน',
+      color: 'text-teal-700',
+      bg: 'bg-teal-50',
+      border: 'border-teal-200',
+      badgeBg: 'bg-teal-100/80 text-teal-800 border-teal-200',
+      icon: ShieldCheck,
+      kind: 'user' as TabKey
+    };
+  }
+  if (a.includes('แบ่งล็อต')) {
+    return {
+      label: 'ตัดแบ่งจำนวน (แยกล็อต)',
+      color: 'text-indigo-700',
+      bg: 'bg-indigo-50',
+      border: 'border-indigo-200',
+      badgeBg: 'bg-indigo-100/80 text-indigo-800 border-indigo-200',
+      icon: ArrowLeftRight,
+      kind: 'edit' as TabKey
+    };
+  }
+  if (a.includes('รูป')) {
+    return {
+      label: 'อัปเดตรูปภาพ',
+      color: 'text-blue-700',
+      bg: 'bg-blue-50',
+      border: 'border-blue-200',
+      badgeBg: 'bg-blue-100/80 text-blue-800 border-blue-200',
+      icon: Eye,
+      kind: 'edit' as TabKey
     };
   }
   // Default to edit
@@ -186,7 +317,7 @@ const technicalKeys = new Set([
   'parentId',
   'salvageSatang',
   'lifecycle',
-  // Request / workflow fields (not asset data)
+  // Request / workflow / stocktake technical fields (not asset data)
   'assetId',
   'assetVersion',
   'kind',
@@ -194,8 +325,21 @@ const technicalKeys = new Set([
   'stage',
   'chain',
   'actor',
+  'actorName',
   'imageVersion',
-  'imageUrl'
+  'imageUrl',
+  'result',
+  'stocktakeId',
+  'requesterId',
+  'requesterName',
+  'requesterRole',
+  'final',
+  'year',
+  'passwordChanged',
+  'costSatang',
+  'requested',
+  'count',
+  'snapshot'
 ]);
 
 function formatValue(key: string, val: unknown): string {
@@ -206,11 +350,14 @@ function formatValue(key: string, val: unknown): string {
   if (key === 'condition' && typeof val === 'string') {
     return conditions[val as keyof typeof conditions] || val;
   }
+  if (key === 'result' && typeof val === 'string') {
+    return stocktakeResultMeta[val]?.label || val;
+  }
   if (key === 'active') {
     return val ? 'เปิดใช้งาน' : 'ระงับการใช้งาน';
   }
   if (key === 'quantity') {
-    return `${Number(val).toLocaleString()} หน่วย`;
+    return `${Number(val).toLocaleString()} ชิ้น`;
   }
   if (key === 'lifeYears') {
     return `${val} ปี`;
@@ -241,7 +388,7 @@ function parseJsonSafe(str: string | null | undefined): Record<string, unknown> 
 function VisualDiffViewer({
   beforeStr,
   afterStr,
-  action
+  action = ''
 }: {
   beforeStr: string;
   afterStr: string;
@@ -249,16 +396,221 @@ function VisualDiffViewer({
 }) {
   const beforeObj = parseJsonSafe(beforeStr);
   const afterObj = parseJsonSafe(afterStr);
+  const act = action.toLowerCase();
 
-  if (Object.keys(beforeObj).length === 0 && Object.keys(afterObj).length === 0) {
+  // 1. กรณีเปิดรอบตรวจนับ
+  if (act.includes('เปิดรอบตรวจนับ')) {
+    const roundName = afterObj.name ? String(afterObj.name) : 'รอบตรวจนับใหม่';
+    const yearStr = afterObj.year ? ` (ประจำปีงบประมาณ ${afterObj.year})` : '';
     return (
-      <div className="text-[11.5px] text-slate-400 italic">
-        ไม่มีรายละเอียดการเปลี่ยนแปลงที่บันทึกไว้
+      <div className="bg-sky-50/80 border border-sky-200/90 rounded-lg p-2.5 text-xs flex items-center gap-2 text-sky-900">
+        <QrCode size={15} className="text-sky-600 shrink-0" />
+        <span>
+          เปิดรอบการตรวจนับครุภัณฑ์: <strong className="text-sky-950 font-bold">{roundName}</strong>{yearStr}
+        </span>
       </div>
     );
   }
 
-  // 1. กรณีเป็น Batch Import / Upload Excel (นำเข้าข้อมูล)
+  // 2. กรณีปิดรอบตรวจนับ
+  if (act.includes('ปิดรอบตรวจนับ')) {
+    return (
+      <div className="bg-slate-100/90 border border-slate-200 rounded-lg p-2.5 text-xs flex items-center gap-2 text-slate-700">
+        <CheckCircle2 size={15} className="text-emerald-600 shrink-0" />
+        <span>สิ้นสุดและปิดรอบการตรวจนับครุภัณฑ์ประจำปีเรียบร้อยแล้ว</span>
+      </div>
+    );
+  }
+
+  // 3. กรณีบันทึกตรวจนับ (QR / สแกน)
+  if (act.includes('บันทึกตรวจนับ')) {
+    const rawResult = String(afterObj.result || 'normal');
+    const resMeta = stocktakeResultMeta[rawResult] || {
+      label: rawResult,
+      style: 'bg-slate-100 text-slate-700 border-slate-300'
+    };
+    const qty = afterObj.quantity !== undefined && afterObj.quantity !== null ? Number(afterObj.quantity) : 1;
+    return (
+      <div className="bg-sky-50/70 border border-sky-200/80 rounded-lg p-2.5 text-xs flex flex-wrap items-center gap-2.5">
+        <span className="text-slate-600 font-medium">ผลการตรวจนับ:</span>
+        <span className={`px-2 py-0.5 rounded-md font-bold text-xs border ${resMeta.style}`}>
+          {resMeta.label}
+        </span>
+        <span className="text-slate-300">·</span>
+        <span className="text-slate-600">
+          จำนวนที่พบจริง: <strong className="text-slate-900 font-bold">{qty.toLocaleString('th-TH')} ชิ้น</strong>
+        </span>
+      </div>
+    );
+  }
+
+  // 4. กรณีอนุมัติคำขอ
+  if (act.includes('อนุมัติ')) {
+    const isFinal = Boolean(afterObj.final);
+    const stage = afterObj.stage ? Number(afterObj.stage) : 1;
+    return (
+      <div className="bg-emerald-50/90 border border-emerald-200 rounded-lg p-2.5 text-xs flex items-center gap-2 text-emerald-900">
+        <CheckCircle2 size={15} className="text-emerald-600 shrink-0" />
+        <span>
+          {isFinal
+            ? 'อนุมัติคำขอสมบูรณ์ครบทุกขั้นตอนเรียบร้อยแล้ว (มีผลบังคับใช้ในระบบทันที)'
+            : `ผ่านการอนุมัติขั้นที่ ${stage} เรียบร้อยแล้ว (ส่งต่อยังผู้มีอำนาจลำดับถัดไป)`}
+        </span>
+      </div>
+    );
+  }
+
+  // 5. กรณีส่งคำขอกลับ / ปฏิเสธคำขอ
+  if (act.includes('ส่งคำขอกลับ') || act.includes('ปฏิเสธ')) {
+    return (
+      <div className="bg-rose-50/90 border border-rose-200 rounded-lg p-2.5 text-xs flex items-center gap-2 text-rose-900">
+        <AlertTriangle size={15} className="text-rose-600 shrink-0" />
+        <span>ส่งคำขอกลับให้ผู้ยื่นคำขอแก้ไขหรือทบทวนข้อมูลใหม่</span>
+      </div>
+    );
+  }
+
+  // 6. กรณียื่นส่งคำขอ (โอนย้าย / ส่งซ่อม / จำหน่าย)
+  if (act.includes('ส่งคำขอ')) {
+    const reqPayload = typeof afterObj.payload === 'string'
+      ? parseJsonSafe(afterObj.payload)
+      : (afterObj.payload && typeof afterObj.payload === 'object' ? afterObj.payload as Record<string, unknown> : {});
+
+    if (act.includes('ซ่อม')) {
+      return (
+        <div className="bg-orange-50/80 border border-orange-200 rounded-lg p-2.5 text-xs space-y-1">
+          <div className="flex flex-wrap items-center gap-2 text-orange-950">
+            <Wrench size={14} className="text-orange-600 shrink-0" />
+            <span className="font-semibold">ยื่นคำขอส่งซ่อมแซม:</span>
+            {reqPayload.symptom ? <span>อาการ: <strong>{String(reqPayload.symptom)}</strong></span> : null}
+            {reqPayload.estimatedCostSatang ? (
+              <span>· ประมาณการค่าใช้จ่าย: <strong>฿{money(Number(reqPayload.estimatedCostSatang))}</strong></span>
+            ) : null}
+          </div>
+        </div>
+      );
+    }
+
+    if (act.includes('จำหน่าย')) {
+      return (
+        <div className="bg-rose-50/80 border border-rose-200 rounded-lg p-2.5 text-xs space-y-1">
+          <div className="flex flex-wrap items-center gap-2 text-rose-950">
+            <Trash2 size={14} className="text-rose-600 shrink-0" />
+            <span className="font-semibold">ยื่นคำขอจำหน่ายครุภัณฑ์ออกจากบัญชี:</span>
+            {reqPayload.method ? <span>วิธีจำหน่าย: <strong>{String(reqPayload.method)}</strong></span> : null}
+            {reqPayload.quantity ? <span>· จำนวน: <strong>{Number(reqPayload.quantity)} ชิ้น</strong></span> : null}
+          </div>
+        </div>
+      );
+    }
+
+    // Default to transfer
+    return (
+      <div className="bg-purple-50/80 border border-purple-200 rounded-lg p-2.5 text-xs space-y-1">
+        <div className="flex flex-wrap items-center gap-2 text-purple-950">
+          <ArrowLeftRight size={14} className="text-purple-600 shrink-0" />
+          <span className="font-semibold">ยื่นคำขอโอนย้ายสถานที่ / ผู้ถือครอง:</span>
+          {reqPayload.targetBranch ? <span>สาขาวิชาใหม่: <strong>{String(reqPayload.targetBranch)}</strong></span> : null}
+          {reqPayload.targetLocation ? <span>สถานที่ใหม่: <strong>{String(reqPayload.targetLocation)}</strong></span> : null}
+          {reqPayload.targetCustodian ? <span>ผู้รับผิดชอบใหม่: <strong>{String(reqPayload.targetCustodian)}</strong></span> : null}
+          {reqPayload.quantity ? <span>· จำนวน: <strong>{Number(reqPayload.quantity)} ชิ้น</strong></span> : null}
+        </div>
+      </div>
+    );
+  }
+
+  // 7. กรณีดำเนินการทางกายภาพสำเร็จ (โอนย้ายสำเร็จ / จำหน่ายสำเร็จ)
+  if (act.includes('ดำเนินการ')) {
+    if (act.includes('จำหน่าย')) {
+      return (
+        <div className="bg-rose-50/90 border border-rose-200 rounded-lg p-2.5 text-xs flex items-center gap-2 text-rose-900">
+          <CheckCircle2 size={15} className="text-rose-600 shrink-0" />
+          <span>ตัดจำหน่ายครุภัณฑ์ออกจากทะเบียนใช้งานเรียบร้อยแล้ว</span>
+        </div>
+      );
+    }
+    return (
+      <div className="bg-purple-50/90 border border-purple-200 rounded-lg p-2.5 text-xs flex flex-wrap items-center gap-2 text-purple-900">
+        <CheckCircle2 size={15} className="text-purple-600 shrink-0" />
+        <span className="font-semibold">ดำเนินการโอนย้ายสำเร็จ:</span>
+        {afterObj.targetBranch ? <span>สังกัดใหม่: <strong>{String(afterObj.targetBranch)}</strong></span> : null}
+        {afterObj.targetLocation ? <span>สถานที่ใหม่: <strong>{String(afterObj.targetLocation)}</strong></span> : null}
+        {afterObj.targetCustodian ? <span>ผู้รับผิดชอบใหม่: <strong>{String(afterObj.targetCustodian)}</strong></span> : null}
+      </div>
+    );
+  }
+
+  // 8. กรณีซ่อมเสร็จสิ้น
+  if (act.includes('ซ่อมเสร็จ')) {
+    return (
+      <div className="bg-emerald-50/90 border border-emerald-200 rounded-lg p-2.5 text-xs flex flex-wrap items-center gap-2 text-emerald-900">
+        <CheckCircle2 size={15} className="text-emerald-600 shrink-0" />
+        <span>ซ่อมบำรุงเสร็จสิ้น ปรับสภาพเป็น: <strong>ปกติ (พร้อมใช้งาน)</strong></span>
+        {afterObj.costSatang ? <span>· ค่าใช้จ่ายจริง: <strong>฿{money(Number(afterObj.costSatang))} บาท</strong></span> : null}
+      </div>
+    );
+  }
+
+  // 9. กรณีแบ่งล็อต
+  if (act.includes('แบ่งล็อต')) {
+    return (
+      <div className="bg-indigo-50/90 border border-indigo-200 rounded-lg p-2.5 text-xs flex items-center gap-2 text-indigo-900">
+        <ArrowLeftRight size={14} className="text-indigo-600 shrink-0" />
+        <span>ตัดแบ่งจำนวนเพื่อแยกล็อตในทะเบียนครุภัณฑ์เรียบร้อยแล้ว</span>
+      </div>
+    );
+  }
+
+  // 10. กรณีจัดการรูปภาพ
+  if (act.includes('รูป')) {
+    return (
+      <div className="bg-blue-50/90 border border-blue-200 rounded-lg p-2.5 text-xs flex items-center gap-2 text-blue-900">
+        <Eye size={15} className="text-blue-600 shrink-0" />
+        <span>
+          {act.includes('ลบ')
+            ? 'ลบภาพถ่ายครุภัณฑ์ออกจากระบบเรียบร้อยแล้ว'
+            : 'อัปเดตภาพถ่ายครุภัณฑ์ในระบบเรียบร้อยแล้ว'}
+        </span>
+      </div>
+    );
+  }
+
+  // 11. กรณีจัดการสิทธิ์ผู้ใช้
+  if (act.includes('สิทธิ์') || act.includes('user') || act.includes('ผู้ใช้')) {
+    const roleMap: Record<string, string> = {
+      admin: 'ผู้ดูแลระบบ (Admin)',
+      staff: 'เจ้าหน้าที่พัสดุ (Staff)',
+      approver: 'ผู้อนุมัติ (Approver)',
+      viewer: 'ผู้เรียกดูข้อมูล (Viewer)',
+      central: 'เจ้าหน้าที่ส่วนกลาง'
+    };
+    return (
+      <div className="bg-teal-50/90 border border-teal-200 rounded-lg p-2.5 text-xs flex flex-wrap items-center gap-3 text-teal-900">
+        <UserCheck size={15} className="text-teal-600 shrink-0" />
+        {afterObj.name ? <span>ชื่อ: <strong>{String(afterObj.name)}</strong></span> : null}
+        {afterObj.email ? <span>อีเมล: <strong>{String(afterObj.email)}</strong></span> : null}
+        {afterObj.role ? <span>สิทธิ์: <strong>{roleMap[String(afterObj.role)] || String(afterObj.role)}</strong></span> : null}
+        {afterObj.active !== undefined ? (
+          <span className={`px-2 py-0.5 rounded text-[11px] font-bold border ${afterObj.active ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-rose-100 text-rose-800 border-rose-300'}`}>
+            {afterObj.active ? 'เปิดใช้งาน' : 'ระงับการใช้งาน'}
+          </span>
+        ) : null}
+        {afterObj.passwordChanged ? <span className="text-teal-700 italic">(เปลี่ยนรหัสผ่าน)</span> : null}
+      </div>
+    );
+  }
+
+  // 12. กรณีกำหนดสายอนุมัติ
+  if (act.includes('สายอนุมัติ')) {
+    return (
+      <div className="bg-teal-50/90 border border-teal-200 rounded-lg p-2.5 text-xs flex items-center gap-2 text-teal-900">
+        <ShieldCheck size={15} className="text-teal-600 shrink-0" />
+        <span>บันทึกการปรับปรุงลำดับและรายชื่อในสายการอนุมัติเรียบร้อยแล้ว</span>
+      </div>
+    );
+  }
+
+  // 13. กรณีนำเข้า Excel / Upload
   const count = afterObj.rows ?? afterObj.rowCount ?? afterObj.imported ?? afterObj.count;
   if (count !== undefined && count !== null) {
     const filename = typeof afterObj.filename === 'string' ? ` (ไฟล์: ${afterObj.filename})` : '';
@@ -273,7 +625,15 @@ function VisualDiffViewer({
     );
   }
 
-  // 2. กรณีเพิ่มครุภัณฑ์ใหม่ (Create New Asset)
+  if (Object.keys(beforeObj).length === 0 && Object.keys(afterObj).length === 0) {
+    return (
+      <div className="text-[11.5px] text-slate-400 italic">
+        ไม่มีรายละเอียดการเปลี่ยนแปลงที่บันทึกไว้
+      </div>
+    );
+  }
+
+  // 14. กรณีเพิ่มครุภัณฑ์ใหม่ (Create New Asset)
   const isCreate = Object.keys(beforeObj).length === 0 || (action && action.includes('เพิ่ม'));
   if (isCreate) {
     const fieldsToDisplay: Array<{ label: string; val: string }> = [];
@@ -329,7 +689,7 @@ function VisualDiffViewer({
     }
   }
 
-  // 3. กรณีแก้ไขข้อมูล (Edit/Update Asset)
+  // 15. กรณีแก้ไขข้อมูลครุภัณฑ์ (Edit Asset Diff)
   const allKeys = Array.from(new Set([...Object.keys(beforeObj), ...Object.keys(afterObj)]));
   const diffs: Array<{ key: string; label: string; oldVal: string; newVal: string }> = [];
 
@@ -412,7 +772,7 @@ export default function AuditView({
     for (const e of events) {
       const meta = getActionMeta(e.action);
       if (meta.kind === 'edit') editCount++;
-      else if (meta.kind === 'transfer' || meta.kind === 'repair') movementCount++;
+      else if (meta.kind === 'transfer' || meta.kind === 'repair' || meta.kind === 'dispose' || meta.kind === 'stocktake') movementCount++;
       else if (meta.kind === 'import' || meta.kind === 'user') systemCount++;
     }
 
@@ -579,7 +939,7 @@ export default function AuditView({
             <ArrowLeftRight size={20} />
           </div>
           <div className="min-w-0 flex-1">
-            <span className="text-xs text-slate-500 font-medium block">โอนย้าย / ส่งซ่อม / คำขอ</span>
+            <span className="text-xs text-slate-500 font-medium block">โอนย้าย / ซ่อม / จำหน่าย / ตรวจนับ</span>
             <strong className="text-xl font-bold text-purple-600 block leading-tight">
               {stats.movementCount.toLocaleString('th-TH')} รายการ
             </strong>
@@ -608,9 +968,11 @@ export default function AuditView({
         <div className="flex flex-wrap items-center gap-2">
           {[
             { key: 'all' as TabKey, label: `ทั้งหมด (${events.length})` },
-            { key: 'edit' as TabKey, label: `แก้ไขข้อมูล (${stats.editCount})` },
+            { key: 'stocktake' as TabKey, label: 'ตรวจนับ (QR)' },
             { key: 'transfer' as TabKey, label: 'โอนย้าย' },
             { key: 'repair' as TabKey, label: 'ส่งซ่อม' },
+            { key: 'dispose' as TabKey, label: 'ขอจำหน่าย' },
+            { key: 'edit' as TabKey, label: `แก้ไขข้อมูล (${stats.editCount})` },
             { key: 'import' as TabKey, label: 'นำเข้าข้อมูล' },
             { key: 'user' as TabKey, label: 'ผู้ใช้/สิทธิ์' }
           ].map(t => (
@@ -708,12 +1070,23 @@ export default function AuditView({
             const Icon = meta.icon;
             const afterObj = parseJsonSafe(e.after);
             const beforeObj = parseJsonSafe(e.before);
-            const linkedAsset = assets.find(a => 
+
+            // รายการระดับระบบ (เช่น เปิด/ปิดรอบตรวจนับ, จัดการผู้ใช้, นำเข้า Excel) ไม่เชื่อมโยง Asset เดี่ยว
+            const isSystemEvent = [
+              'เปิดรอบตรวจนับ',
+              'ปิดรอบตรวจนับ',
+              'อัปโหลด excel',
+              'นำเข้าครุภัณฑ์แบบกลุ่ม',
+              'จัดการสิทธิ์ผู้ใช้',
+              'กำหนดสายอนุมัติ'
+            ].some(prefix => (e.action || '').toLowerCase().includes(prefix));
+
+            const linkedAsset = !isSystemEvent ? assets.find(a => 
               (e.assetId && a.id === e.assetId) ||
               (afterObj.id && a.id === String(afterObj.id)) ||
               (afterObj.code && a.code === String(afterObj.code)) ||
               (beforeObj.code && a.code === String(beforeObj.code))
-            );
+            ) : null;
 
             return (
               <div key={e.id} className="p-4 sm:p-5 hover:bg-slate-50/50 transition-colors">
@@ -729,7 +1102,7 @@ export default function AuditView({
 
                     {/* Information */}
                     <div className="min-w-0 flex-1 space-y-2">
-                      {/* Row 1: Action Badge + Asset Code + Name */}
+                      {/* Row 1: Action Badge + Asset Code + Name หรือ Round info */}
                       <div className="flex flex-wrap items-center gap-2">
                         <span
                           className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold border ${meta.badgeBg}`}
@@ -737,7 +1110,11 @@ export default function AuditView({
                           {meta.label}
                         </span>
 
-                        {linkedAsset ? (
+                        {(e.action || '').includes('เปิดรอบตรวจนับ') && afterObj.name ? (
+                          <span className="text-xs font-bold text-slate-800">
+                            {String(afterObj.name)} {afterObj.year ? `(ปีงบ ${afterObj.year})` : ''}
+                          </span>
+                        ) : linkedAsset ? (
                           <>
                             <span className="font-mono text-xs font-bold text-blue-700 bg-blue-50/80 px-2 py-0.5 rounded border border-blue-100 select-all">
                               {linkedAsset.code}
@@ -746,7 +1123,7 @@ export default function AuditView({
                               {linkedAsset.name}
                             </span>
                           </>
-                        ) : afterObj.code ? (
+                        ) : !isSystemEvent && afterObj.code ? (
                           <>
                             <span className="font-mono text-xs font-bold text-blue-700 bg-blue-50/80 px-2 py-0.5 rounded border border-blue-100 select-all">
                               {String(afterObj.code)}
@@ -757,7 +1134,7 @@ export default function AuditView({
                               </span>
                             ) : null}
                           </>
-                        ) : e.assetId ? (
+                        ) : !isSystemEvent && e.assetId ? (
                           <span className="font-mono text-xs text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
                             {e.assetId}
                           </span>
@@ -799,7 +1176,7 @@ export default function AuditView({
                     </div>
 
                     {/* View Asset Button */}
-                    {linkedAsset && select && (
+                    {linkedAsset && select && !isSystemEvent && (
                       <Button
                         size="sm"
                         variant="outline"

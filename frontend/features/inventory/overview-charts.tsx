@@ -152,7 +152,7 @@ export default function OverviewCharts({ assets, onSelectBranch }: OverviewChart
                           <div className="bg-white border border-slate-200 rounded-lg p-2.5 shadow-md text-xs">
                             <p className="font-semibold text-slate-800">{item.fullName || item.name}</p>
                             <p className="text-red-500 font-bold mt-1">
-                              จำนวน: {item.count.toLocaleString()} หน่วย
+                              จำนวน: {item.count.toLocaleString()} ชิ้น
                             </p>
                           </div>
                         );
@@ -222,7 +222,7 @@ export default function OverviewCharts({ assets, onSelectBranch }: OverviewChart
                               <span>{item.name}</span>
                             </div>
                             <p className="text-slate-600 mt-1 font-medium">
-                              {item.value.toLocaleString()} หน่วย ({item.percentage}%)
+                              {item.value.toLocaleString()} ชิ้น ({item.percentage}%)
                             </p>
                           </div>
                         );
