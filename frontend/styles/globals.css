@@ -1378,7 +1378,7 @@ button:focus-visible, a:focus-visible {
     gap: 12px;
   }
   .page-heading h1 {
-    font-size: 1.45rem;
+    font-size: 1.2rem;
   }
   .panel-head, .panel-body {
     padding: 16px;
@@ -1406,6 +1406,22 @@ button:focus-visible, a:focus-visible {
   }
   .topbar-left > b {
     font-size: 13.5px;
+  }
+}
+
+@media (max-width: 400px) {
+  .workspace {
+    padding: 12px 10px 24px;
+  }
+  .topbar {
+    padding: 0 10px;
+    gap: 8px;
+  }
+  .page-heading h1 {
+    font-size: 1.1rem;
+  }
+  .page-heading p {
+    font-size: 12px;
   }
 }
 

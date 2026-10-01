@@ -318,7 +318,12 @@ export default function Workspace(){
             <SidebarTrigger className="text-slate-300 hover:text-white hover:bg-slate-800" />
             <div className="flex items-center gap-2.5 min-w-0">
               <img src="/logo-faculty.png" alt="โลโก้คณะ" className="w-7 h-7 object-contain rounded-md bg-white p-0.5 shrink-0 shadow-xs" />
-              <b className="text-white text-xs sm:text-[14.5px] font-semibold tracking-wide truncate max-w-[240px] sm:max-w-none">
+              {/* Short title on mobile */}
+              <b className="text-white text-xs font-semibold tracking-wide truncate sm:hidden">
+                ระบบครุภัณฑ์ · คณะวิศวกรรมฯ
+              </b>
+              {/* Full title on sm+ */}
+              <b className="text-white text-[14px] font-semibold tracking-wide truncate hidden sm:block max-w-[420px] lg:max-w-none">
                 ระบบบริหารจัดการครุภัณฑ์ · คณะวิศวกรรมศาสตร์และเทคโนโลยีอุตสาหกรรม มหาวิทยาลัยกาฬสินธุ์
               </b>
             </div>
