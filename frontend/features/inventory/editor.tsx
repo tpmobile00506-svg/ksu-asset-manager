@@ -564,23 +564,28 @@ export default function Editor({
 
                 {modal?.kind === 'check' && (
                   <div className="flex flex-col gap-4">
-                    <div className="notice">
-                      <b>{modal.item.name}</b>
-                      <p className="mono">{modal.item.code}</p>
-                      <p className="mt-1">
+                    <div className="notice p-3 bg-blue-50/70 border border-blue-200/80 rounded-xl text-xs">
+                      <b className="text-slate-900 text-sm block">{modal.item.name}</b>
+                      <p className="mono font-mono text-blue-700 font-bold mt-0.5">{modal.item.code}</p>
+                      <p className="mt-1 text-slate-600">
                         จำนวนตามทะเบียน ณ วันเปิดรอบ:{' '}
-                        {JSON.parse(modal.item.snapshot).quantity} หน่วย
+                        <strong className="text-slate-900">{JSON.parse(modal.item.snapshot).quantity}</strong> หน่วย
                       </p>
                     </div>
-                    <div className="form-grid">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <Pick
                         name="result"
                         label="ผลการตรวจนับ"
+                        defaultValue={
+                          modal.item.result && modal.item.result !== 'pending'
+                            ? (modal.item.result === 'matched' ? 'normal' : modal.item.result)
+                            : 'normal'
+                        }
                         options={[
-                          ['matched', 'ตรงตามทะเบียน'],
+                          ['normal', 'ตรงตามทะเบียน'],
                           ['damaged', 'พบแต่ชำรุด'],
                           ['missing', 'ไม่พบ'],
-                          ['excess', 'พบเกินจำนวน']
+                          ['mismatch', 'จำนวน/ข้อมูลไม่ตรง']
                         ]}
                       />
                       <Field
@@ -594,12 +599,14 @@ export default function Editor({
                         required
                       />
                     </div>
-                    <label>
+                    <label className="flex flex-col gap-1 text-xs text-slate-700 font-medium">
                       <span>หมายเหตุผลตรวจนับ</span>
                       <Textarea
                         name="reason"
                         placeholder="เช่น ชำรุดจอแตก หรือ อยู่ระหว่างยืมใช้งาน"
+                        defaultValue={modal.item.reason ?? ''}
                         rows={2}
+                        className="text-xs"
                       />
                     </label>
                   </div>

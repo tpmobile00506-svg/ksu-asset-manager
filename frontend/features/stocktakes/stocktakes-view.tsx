@@ -167,16 +167,16 @@ export default function StocktakesView({
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
-      {/* Controls Row matching desktop_6_stocktakes.svg */}
-      <div className="bg-white rounded-xl border border-slate-200/80 p-3.5 shadow-sm flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-3 flex-1 min-w-[280px]">
+      {/* Controls Row */}
+      <div className="bg-white rounded-xl border border-slate-200/80 p-3 sm:p-3.5 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 flex-1 min-w-0">
           {/* Round Selector Dropdown */}
-          <div className="flex items-center gap-1.5 text-xs text-slate-700 bg-slate-50 px-3 py-2 rounded-lg border border-slate-200">
+          <div className="flex items-center gap-1.5 text-xs text-slate-700 bg-slate-50 px-3 py-2 rounded-lg border border-slate-200 shrink-0">
             <span className="font-bold whitespace-nowrap">รอบตรวจนับ:</span>
             <select
               value={roundId}
               onChange={e => setRoundId(e.target.value)}
-              className="bg-transparent font-semibold text-blue-700 border-none outline-none cursor-pointer max-w-[240px] truncate"
+              className="bg-transparent font-semibold text-blue-700 border-none outline-none cursor-pointer max-w-full sm:max-w-[240px] truncate"
             >
               {data.rounds.map(r => (
                 <option key={r.id} value={r.id}>
@@ -187,23 +187,23 @@ export default function StocktakesView({
           </div>
 
           {/* Search Input */}
-          <div className="relative flex-1 min-w-[240px] max-w-md">
+          <div className="relative flex-1 min-w-0">
             <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <Input
               placeholder="ค้นหารหัส, ชื่อครุภัณฑ์, หรือหมายเหตุ…"
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="pl-9 h-9 text-xs bg-slate-50/60 border-slate-200 focus:bg-white"
+              className="pl-9 h-9 text-xs bg-slate-50/60 border-slate-200 focus:bg-white w-full"
             />
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {/* Scan QR Button */}
           <Button
             size="sm"
             onClick={handleScanQr}
-            className="h-9 px-3.5 text-xs font-bold bg-[#0284c7] hover:bg-[#0369a1] text-white shadow-sm cursor-pointer"
+            className="flex-1 sm:flex-initial h-9 px-3.5 text-xs font-bold bg-[#0284c7] hover:bg-[#0369a1] text-white shadow-sm cursor-pointer"
           >
             <ScanLine size={15} className="mr-1.5" /> สแกน QR Code
           </Button>
@@ -213,9 +213,9 @@ export default function StocktakesView({
             <Button
               size="sm"
               onClick={() => open('round')}
-              className="h-9 px-3 text-xs font-bold bg-[#2563eb] hover:bg-[#1d4ed8] text-white shadow-sm cursor-pointer"
+              className="flex-1 sm:flex-initial h-9 px-3 text-xs font-bold bg-[#2563eb] hover:bg-[#1d4ed8] text-white shadow-sm cursor-pointer"
             >
-              <Plus size={15} className="mr-1" /> เปิดรอบตรวจนับใหม่
+              <Plus size={15} className="mr-1" /> เปิดรอบใหม่
             </Button>
           )}
 
@@ -234,75 +234,78 @@ export default function StocktakesView({
         </div>
       </div>
 
-      {/* 4 Progress / Summary Cards matching desktop_6_stocktakes.svg */}
+      {/* 4 Progress / Summary Cards */}
       {round && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
           {/* Card 1: ตรวจพบแล้ว + Progress bar */}
-          <div className="bg-white rounded-xl border border-slate-200/80 p-4 shadow-sm flex flex-col justify-between">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs text-slate-500 font-medium">ตรวจพบแล้วในรอบนี้</span>
-              <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+          <div className="bg-white rounded-xl border border-slate-200/80 p-3 sm:p-4 shadow-sm flex flex-col justify-between">
+            <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+              <span className="text-[11px] sm:text-xs text-slate-500 font-medium">ตรวจพบแล้ว</span>
+              <span className="text-[10px] sm:text-xs font-bold text-emerald-600 bg-emerald-50 px-1.5 sm:px-2 py-0.5 rounded-full border border-emerald-200">
                 {stats.percent}%
               </span>
             </div>
-            <strong className="text-2xl font-bold text-slate-900 block mb-2 leading-none">
+            <strong className="text-lg sm:text-2xl font-bold text-slate-900 block mb-2 leading-none">
               {stats.checked.toLocaleString('th-TH')}{' '}
-              <span className="text-sm font-normal text-slate-400">/ {stats.total.toLocaleString('th-TH')}</span>
+              <span className="text-xs sm:text-sm font-normal text-slate-400">/ {stats.total.toLocaleString('th-TH')}</span>
             </strong>
-            <Progress value={Number(stats.percent)} className="h-2 bg-slate-100" />
+            <Progress value={Number(stats.percent)} className="h-1.5 sm:h-2 bg-slate-100" />
           </div>
 
           {/* Card 2: ยังไม่ได้ตรวจ */}
-          <div className="bg-white rounded-xl border border-slate-200/80 p-4 shadow-sm flex items-center gap-3.5">
-            <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 shrink-0">
-              <Clock size={22} />
+          <div className="bg-white rounded-xl border border-slate-200/80 p-3 sm:p-4 shadow-sm flex items-center gap-2.5 sm:gap-3.5">
+            <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 shrink-0">
+              <Clock size={18} className="sm:hidden" />
+              <Clock size={22} className="hidden sm:block" />
             </div>
             <div className="min-w-0 flex-1">
-              <span className="text-xs text-slate-500 font-medium block">ยังไม่ได้ตรวจ</span>
-              <strong className="text-xl font-bold text-slate-800 block leading-tight">
-                {stats.pendingCount.toLocaleString('th-TH')} รายการ
+              <span className="text-[11px] sm:text-xs text-slate-500 font-medium block truncate">ยังไม่ได้ตรวจ</span>
+              <strong className="text-base sm:text-xl font-bold text-slate-800 block leading-tight">
+                {stats.pendingCount.toLocaleString('th-TH')}
               </strong>
-              <span className="text-[11px] text-slate-400 block mt-0.5">รอเจ้าหน้าที่ตรวจสอบในพื้นที่</span>
+              <span className="text-[10px] sm:text-[11px] text-slate-400 block mt-0.5 truncate">รอตรวจสอบ</span>
             </div>
           </div>
 
           {/* Card 3: สภาพปกติ */}
-          <div className="bg-white rounded-xl border border-slate-200/80 p-4 shadow-sm flex items-center gap-3.5">
-            <div className="w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600 shrink-0">
-              <CheckCircle2 size={22} className="stroke-[2.5]" />
+          <div className="bg-white rounded-xl border border-slate-200/80 p-3 sm:p-4 shadow-sm flex items-center gap-2.5 sm:gap-3.5">
+            <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600 shrink-0">
+              <CheckCircle2 size={18} className="sm:hidden stroke-[2.5]" />
+              <CheckCircle2 size={22} className="hidden sm:block stroke-[2.5]" />
             </div>
             <div className="min-w-0 flex-1">
-              <span className="text-xs text-slate-500 font-medium block">สภาพปกติพร้อมใช้งาน</span>
-              <strong className="text-xl font-bold text-emerald-600 block leading-tight">
-                {stats.normalCount.toLocaleString('th-TH')} รายการ
+              <span className="text-[11px] sm:text-xs text-slate-500 font-medium block truncate">สภาพปกติ</span>
+              <strong className="text-base sm:text-xl font-bold text-emerald-600 block leading-tight">
+                {stats.normalCount.toLocaleString('th-TH')}
               </strong>
-              <span className="text-[11px] text-emerald-700 block mt-0.5">พร้อมใช้งานในคณะ</span>
+              <span className="text-[10px] sm:text-[11px] text-emerald-700 block mt-0.5 truncate">พร้อมใช้งาน</span>
             </div>
           </div>
 
           {/* Card 4: ชำรุด/ส่งซ่อม/สูญหาย */}
-          <div className="bg-white rounded-xl border border-slate-200/80 p-4 shadow-sm flex items-center gap-3.5">
-            <div className="w-12 h-12 rounded-full bg-rose-50 flex items-center justify-center text-rose-600 shrink-0">
-              <AlertTriangle size={22} />
+          <div className="bg-white rounded-xl border border-slate-200/80 p-3 sm:p-4 shadow-sm flex items-center gap-2.5 sm:gap-3.5">
+            <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-full bg-rose-50 flex items-center justify-center text-rose-600 shrink-0">
+              <AlertTriangle size={18} className="sm:hidden" />
+              <AlertTriangle size={22} className="hidden sm:block" />
             </div>
             <div className="min-w-0 flex-1">
-              <span className="text-xs text-slate-500 font-medium block">ชำรุด / ส่งซ่อม / ไม่พบ</span>
-              <strong className="text-xl font-bold text-rose-600 block leading-tight">
-                {stats.damagedCount.toLocaleString('th-TH')} รายการ
+              <span className="text-[11px] sm:text-xs text-slate-500 font-medium block truncate">ชำรุด/ไม่พบ</span>
+              <strong className="text-base sm:text-xl font-bold text-rose-600 block leading-tight">
+                {stats.damagedCount.toLocaleString('th-TH')}
               </strong>
-              <span className="text-[11px] text-rose-700 block mt-0.5">รอส่งซ่อมบำรุงหรือจำหน่าย</span>
+              <span className="text-[10px] sm:text-[11px] text-rose-700 block mt-0.5 truncate">รอส่งซ่อม/จำหน่าย</span>
             </div>
           </div>
         </div>
       )}
 
-      {/* Full Width Stocktake Table */}
+      {/* Stocktake Table & Mobile Card View */}
       {round ? (
         <div className="bg-white rounded-xl border border-slate-200/80 shadow-sm overflow-hidden">
-          <div className="p-4 border-b border-slate-100 flex items-center justify-between">
+          <div className="p-3.5 sm:p-4 border-b border-slate-100 flex items-center justify-between gap-2">
             <div>
-              <h2 className="text-base font-bold text-slate-900">{round.name}</h2>
-              <p className="text-xs text-slate-500 mt-0.5">
+              <h2 className="text-sm sm:text-base font-bold text-slate-900">{round.name}</h2>
+              <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5">
                 ปีงบประมาณ {round.year} · ตรวจแล้ว {round.checked} / {round.total} รายการ
               </p>
             </div>
@@ -315,7 +318,8 @@ export default function StocktakesView({
             </div>
           ) : filtered.length ? (
             <>
-              <div className="overflow-x-auto">
+              {/* Desktop Table View (md and up) */}
+              <div className="hidden md:block overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-slate-50/70 text-slate-600 text-xs">
@@ -385,7 +389,72 @@ export default function StocktakesView({
                 </Table>
               </div>
 
-              <div className="p-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+              {/* Mobile Cards View (Below md) */}
+              <div className="md:hidden divide-y divide-slate-100">
+                {filtered.slice(page * 40, (page + 1) * 40).map(i => {
+                  const snap = JSON.parse(i.snapshot || '{}');
+                  const isChecked = i.result !== 'pending';
+
+                  return (
+                    <div key={i.id} className="p-3.5 hover:bg-slate-50/70 transition-colors">
+                      <div className="flex items-center justify-between gap-2 mb-1.5">
+                        <span className="font-mono text-xs font-bold text-blue-700 bg-blue-50/80 px-2 py-0.5 rounded border border-blue-100 select-all">
+                          {i.code}
+                        </span>
+                        {isChecked ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            <Check size={11} className="stroke-[3]" /> ตรวจแล้ว
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-slate-100 text-slate-600 border border-slate-200">
+                            ⏱ ยังไม่ตรวจ
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="font-bold text-sm text-slate-900 leading-snug">{i.name}</div>
+                      <div className="text-xs text-slate-500 mt-0.5">{snap.location || '—'}</div>
+
+                      <div className="grid grid-cols-2 gap-2 mt-2.5 pt-2 border-t border-slate-100 text-xs">
+                        <div>
+                          <span className="text-slate-400 text-[10.5px] block">ในระบบ / พบจริง</span>
+                          <span className="font-semibold text-slate-800">
+                            {snap.quantity ?? 1} / <strong className="text-blue-700">{i.quantity ?? '—'}</strong> หน่วย
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-slate-400 text-[10.5px] block">ผลตรวจ</span>
+                          <span className="font-semibold text-slate-800">
+                            {i.result === 'normal' ? '✅ ตรงตามทะเบียน' :
+                             i.result === 'damaged' ? '⚠️ ชำรุด/ส่งซ่อม' :
+                             i.result === 'missing' ? '❌ ไม่พบ' :
+                             i.result === 'mismatch' ? '🔄 ข้อมูลไม่ตรง' : '—'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {editable && round.status === 'open' && (
+                        <div className="mt-3 pt-2 border-t border-slate-100">
+                          <Button
+                            size="sm"
+                            variant={isChecked ? 'outline' : 'default'}
+                            onClick={() => open('check', { item: i })}
+                            className={`w-full h-8 text-xs font-bold cursor-pointer shadow-xs ${
+                              isChecked
+                                ? 'text-slate-700 hover:text-blue-600 border-slate-200'
+                                : 'bg-[#2563eb] text-white hover:bg-[#1d4ed8]'
+                            }`}
+                          >
+                            {isChecked ? 'แก้ไขผลตรวจนับ' : 'บันทึกตรวจนับ'}
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="p-3 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500">
                 <span>
                   แสดงรายการที่ {page * 40 + 1} - {Math.min((page + 1) * 40, filtered.length)} จากทั้งหมด {filtered.length} รายการ
                 </span>

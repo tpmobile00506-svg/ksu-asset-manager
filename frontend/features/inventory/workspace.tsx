@@ -1,6 +1,6 @@
 'use client';
 import {useState,useEffect,useCallback,useRef} from 'react';import {Package,LayoutDashboard,Upload,ArrowLeftRight,QrCode,BarChart3,Users,History,Plus,Search,Download,ChevronRight,ArrowUpDown,FileSpreadsheet,Coins,TriangleAlert,FileCheck2,ArrowRight,LogOut,Pencil,X,Bell,Lock,Eye,EyeOff,Check,Eye as ViewIcon,ScanLine} from 'lucide-react';
-import {Button} from '@/components/ui/button';import {Input} from '@/components/ui/input';import {Table,TableHeader,TableBody,TableRow,TableHead,TableCell} from '@/components/ui/table';import {SidebarProvider,Sidebar,SidebarContent,SidebarHeader,SidebarFooter,SidebarMenu,SidebarMenuItem,SidebarMenuButton,SidebarInset,SidebarTrigger} from '@/components/ui/sidebar';import {Skeleton} from '@/components/ui/skeleton';import {Toaster,toast} from 'sonner';
+import {Button} from '@/components/ui/button';import {Input} from '@/components/ui/input';import {Table,TableHeader,TableBody,TableRow,TableHead,TableCell} from '@/components/ui/table';import {SidebarProvider,Sidebar,SidebarContent,SidebarHeader,SidebarFooter,SidebarMenu,SidebarMenuItem,SidebarMenuButton,SidebarInset,SidebarTrigger,useSidebar} from '@/components/ui/sidebar';import {Skeleton} from '@/components/ui/skeleton';import {Toaster,toast} from 'sonner';
 import {Asset,Role,roles,conditions,headers11,money,standardCategories,standardBranches} from '@/shared/domain';import {exportWorkbook,reportHeaders} from '@/frontend/services/excel-export';import {Any,api,Badge,Pick,Empty,Metric,Pager,Activity,getInitials,SESSION_EXPIRED_EVENT,readApiResponse,cancelApiRequests} from '@/frontend/components/common';import {useAssetTools} from '@/frontend/hooks/use-asset-tools';import Editor from './editor';import AssetThumbnail from './asset-thumbnail';import ImportView from '@/frontend/features/imports/import-view';import Operations from '@/frontend/features/operations/operations';import OverviewCharts from './overview-charts';import AssetDetailView from './asset-detail-view';
 import QrScannerModal from '@/frontend/components/qr-scanner-modal';
 import {WorkspaceData} from '@/frontend/types/models';
@@ -46,6 +46,48 @@ function formatImportDate(isoStr?: string, receivedDate?: string) {
   } catch {
     return { main: isoStr || receivedDate || '—', sub: '' };
   }
+}
+
+type NavEntry = readonly [string, string, React.ComponentType<{ className?: string }>];
+
+function NavList({
+  items,
+  view,
+  onSelect,
+  pendingCount,
+  isAdmin
+}: {
+  items: readonly NavEntry[];
+  view: string;
+  onSelect: (k: string) => void;
+  pendingCount: number;
+  isAdmin: boolean;
+}) {
+  const { isMobile, setOpenMobile } = useSidebar();
+  return (
+    <SidebarMenu>
+      {items.filter(x => x[0] !== 'users' || isAdmin).map(([key, label, Icon]) => (
+        <SidebarMenuItem key={key}>
+          <SidebarMenuButton
+            className="nav-item"
+            isActive={view === key}
+            onClick={() => {
+              onSelect(key);
+              if (isMobile) setOpenMobile(false);
+            }}
+          >
+            <Icon className={view === key ? 'text-blue-300' : 'text-slate-400'} />
+            <span>{label}</span>
+            {key === 'requests' && pendingCount > 0 && (
+              <span className="ml-auto text-xs px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 font-bold">
+                {pendingCount}
+              </span>
+            )}
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      ))}
+    </SidebarMenu>
+  );
 }
 
 export default function Workspace(){
@@ -320,17 +362,13 @@ export default function Workspace(){
         </SidebarHeader>
         <SidebarContent className="px-3">
           <div className="nav-caption">พื้นที่ทำงาน</div>
-          <SidebarMenu>
-            {nav.filter(x=>x[0]!=='users'||data.me.role==='admin').map(([key,label,Icon])=>(
-              <SidebarMenuItem key={key}>
-                <SidebarMenuButton className="nav-item" isActive={view===key} onClick={()=>switchView(key)}>
-                  <Icon className={view===key ? 'text-blue-300' : 'text-slate-400'} />
-                  <span>{label}</span>
-                  {key==='requests'&&pending.length>0&&<span className="ml-auto text-xs px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 font-bold">{pending.length}</span>}
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            ))}
-          </SidebarMenu>
+          <NavList
+            items={nav as unknown as readonly NavEntry[]}
+            view={view}
+            onSelect={switchView}
+            pendingCount={pending.length}
+            isAdmin={data.me.role === 'admin'}
+          />
         </SidebarContent>
         <SidebarFooter className="p-3 border-t border-slate-800/80">
           <div className="flex items-center gap-2.5 p-2 rounded-lg bg-slate-800/90 border border-slate-700/60">

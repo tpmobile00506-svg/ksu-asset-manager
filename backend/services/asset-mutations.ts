@@ -304,7 +304,9 @@ async function perform(tx: Transaction, m: Member, action: string, b: Input, pas
   }
   if (action === 'check') {
     allow(m, ['staff', 'admin']);
-    const result = clean(b.result);
+    let result = clean(b.result);
+    if (result === 'matched') result = 'normal';
+    if (result === 'excess') result = 'mismatch';
     if (!['normal', 'damaged', 'missing', 'mismatch'].includes(result)) throw new ApiError('ผลตรวจไม่ถูกต้อง');
     const item = await tx.stocktakeItem.findUnique({ where: { id: clean(b.id) }, include: { round: true } });
     if (!item || item.round.status !== 'open') throw new ApiError('รอบตรวจนับปิดแล้ว หรือไม่พบรายการ');
