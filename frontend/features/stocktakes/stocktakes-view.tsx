@@ -16,6 +16,7 @@ import {
 import { toast } from 'sonner';
 import { api, Badge, Empty, Pager, date } from '@/frontend/components/common';
 import type { StocktakeItem, StocktakeResponse, WorkspaceData } from '@/shared/models';
+import QrScannerModal from '@/frontend/components/qr-scanner-modal';
 
 export default function StocktakesView({
   data,
@@ -36,6 +37,7 @@ export default function StocktakesView({
   const [items, setItems] = useState<StocktakeItem[]>([]);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(0);
+  const [scannerOpen, setScannerOpen] = useState(false);
 
   const editable = ['staff', 'admin'].includes(data.me.role);
   const round = data.rounds.find(r => r.id === roundId);
@@ -94,9 +96,73 @@ export default function StocktakesView({
   }, [round, items]);
 
   const handleScanQr = () => {
-    toast.info('เปิดใช้งานระบบสแกน QR Code', {
-      description: 'สามารถใช้กล้องมือถือสแกนฉลากครุภัณฑ์ หรือกรอกรหัสในช่องค้นหาเพื่อบันทึกผลได้ทันที'
+    if (!round) {
+      toast.warning('กรุณาเลือกรอบตรวจนับก่อนเปิดสแกน');
+      return;
+    }
+    if (itemsLoading || loadedRound !== roundId) {
+      toast.info('กำลังโหลดข้อมูลในรอบตรวจนับ กรุณารอสักครู่…');
+      return;
+    }
+    setScannerOpen(true);
+  };
+
+  const handleScannedCode = (scannedText: string) => {
+    let cleanCode = scannedText.trim();
+    // แยก query parameter ?asset= หรือ &asset= ในกรณีที่เป็น URL จาก QR sticker
+    try {
+      if (cleanCode.startsWith('http://') || cleanCode.startsWith('https://')) {
+        const url = new URL(cleanCode);
+        const assetParam = url.searchParams.get('asset');
+        if (assetParam) {
+          cleanCode = assetParam;
+        }
+      } else {
+        const match = cleanCode.match(/[?&]asset=([^&]+)/);
+        if (match) {
+          cleanCode = decodeURIComponent(match[1]);
+        }
+      }
+    } catch {
+      // ignore URL parsing error
+    }
+
+    const target = cleanCode.toLowerCase();
+    const rawTarget = scannedText.trim().toLowerCase();
+
+    const found = items.find(i => {
+      if (i.assetId && i.assetId.toLowerCase() === target) return true;
+      if (i.id && i.id.toLowerCase() === target) return true;
+      if (i.code && i.code.toLowerCase() === target) return true;
+      if (i.code && i.code.toLowerCase() === rawTarget) return true;
+      try {
+        const snap = JSON.parse(i.snapshot || '{}');
+        if (snap.serial && snap.serial.toLowerCase() === target) return true;
+        if (snap.serial && snap.serial.toLowerCase() === rawTarget) return true;
+      } catch {}
+      return false;
     });
+
+    if (found) {
+      setScannerOpen(false);
+      if (editable && round?.status === 'open') {
+        open('check', { item: found });
+        toast.success(`พบครุภัณฑ์: ${found.name}`, {
+          description: `รหัส: ${found.code}`
+        });
+      } else {
+        setSearch(found.code);
+        toast.info(`พบครุภัณฑ์: ${found.name}`, {
+          description: round?.status !== 'open' ? 'รอบตรวจนับนี้ปิดรอบแล้ว' : `รหัส: ${found.code}`
+        });
+      }
+      return true;
+    } else {
+      toast.error('ไม่พบครุภัณฑ์ในรอบตรวจนับนี้', {
+        description: `รหัสที่สแกนได้: ${scannedText}`
+      });
+      return false;
+    }
   };
 
   return (
@@ -353,6 +419,15 @@ export default function StocktakesView({
           )}
         </div>
       )}
+
+      {/* QR Scanner Modal with Camera and File Fallback */}
+      <QrScannerModal
+        open={scannerOpen}
+        onClose={() => setScannerOpen(false)}
+        onScan={handleScannedCode}
+        title={round ? `สแกนตรวจนับ: ${round.name}` : 'สแกน QR Code ครุภัณฑ์'}
+        description="ส่องกล้องไปที่ QR Code หรือ Barcode ของครุภัณฑ์เพื่อบันทึกผลทันที"
+      />
     </div>
   );
 }
