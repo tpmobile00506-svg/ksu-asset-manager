@@ -131,42 +131,42 @@ export default function Workspace(){
  async function exportRows(rows:Asset[]){setBusy(true);try{await exportWorkbook(rows);toast.success('ส่งออก Excel เรียบร้อยแล้ว');}catch(e:any){toast.error(e.message);}finally{setBusy(false);}}
  if(loading)return <div className="loading-box"><Package size={36}/><h1 className="my-6">ทะเบียนครุภัณฑ์</h1><Skeleton className="h-14 w-full mb-4"/><Skeleton className="h-40 w-full"/><p className="mt-5">กำลังเชื่อมต่อทะเบียนกลาง…</p></div>;
   if(!data)return (
-    <div className="min-h-screen w-full relative flex flex-col justify-between bg-[#f0f4f9] overflow-hidden py-8 px-4 font-sans">
+    <div className="min-h-screen w-full relative flex flex-col justify-between bg-[#f0f4f9] overflow-hidden py-4 sm:py-8 px-3 sm:px-4 font-sans">
       <div className="absolute top-10 left-10 w-96 h-96 rounded-full bg-[#e0eaf8] blur-3xl pointer-events-none opacity-80" />
       <div className="absolute bottom-10 right-10 w-[30rem] h-[30rem] rounded-full bg-[#e2ebf8] blur-3xl pointer-events-none opacity-80" />
       <div className="absolute top-1/3 right-1/4 w-60 h-60 rounded-full bg-[#e8eff9] blur-2xl pointer-events-none opacity-60" />
 
-      <header className="relative z-10 max-w-6xl w-full mx-auto flex items-center gap-4 pt-3 pb-5">
-        <div style={{ width: '68px', height: '68px' }} className="rounded-2xl bg-white p-2.5 shadow-sm border border-slate-200/90 flex items-center justify-center shrink-0">
+      <header className="relative z-10 max-w-6xl w-full mx-auto flex items-center gap-3 sm:gap-4 pt-2 sm:pt-3 pb-3 sm:pb-5">
+        <div className="w-12 h-12 sm:w-[68px] sm:h-[68px] rounded-xl sm:rounded-2xl bg-white p-1.5 sm:p-2.5 shadow-xs sm:shadow-sm border border-slate-200/90 flex items-center justify-center shrink-0">
           <img src="/logo-university.png" alt="ตราสัญลักษณ์ มหาวิทยาลัยกาฬสินธุ์" className="w-full h-full object-contain" />
         </div>
         <div>
-          <h2 className="text-[#0f172a] text-lg sm:text-xl font-bold leading-tight tracking-tight">
+          <h2 className="text-[#0f172a] text-sm sm:text-xl font-bold leading-tight tracking-tight">
             มหาวิทยาลัยกาฬสินธุ์ · KALASIN UNIVERSITY
           </h2>
-          <p className="text-slate-600 text-sm mt-0.5 font-medium">
+          <p className="text-slate-600 text-xs sm:text-sm mt-0.5 font-medium">
             คณะวิศวกรรมศาสตร์และเทคโนโลยีอุตสาหกรรม
           </p>
         </div>
       </header>
 
-      <div className="relative z-10 max-w-[460px] w-full mx-auto my-auto bg-white rounded-2xl shadow-xl shadow-slate-900/10 border border-slate-200/80 p-7 sm:p-9 transition-all">
-        <div className="flex flex-col items-center text-center mb-6">
-          <div style={{ width: '104px', height: '104px' }} className="rounded-2xl bg-white border border-slate-200/90 p-3 shadow-md flex items-center justify-center mb-4 hover:shadow-lg transition-shadow">
+      <div className="relative z-10 max-w-[460px] w-full mx-auto my-auto bg-white rounded-2xl shadow-xl shadow-slate-900/10 border border-slate-200/80 p-5 sm:p-9 transition-all">
+        <div className="flex flex-col items-center text-center mb-5 sm:mb-6">
+          <div className="w-18 h-18 sm:w-[104px] sm:h-[104px] rounded-xl sm:rounded-2xl bg-white border border-slate-200/90 p-2 sm:p-3 shadow-sm sm:shadow-md flex items-center justify-center mb-3 sm:mb-4 hover:shadow-lg transition-shadow">
             <img src="/logo-faculty.png" alt="คณะวิศวกรรมศาสตร์และเทคโนโลยีอุตสาหกรรม" className="w-full h-full object-contain" />
           </div>
-          <h1 className="text-2xl font-bold text-[#0f172a] tracking-tight">
+          <h1 className="text-xl sm:text-2xl font-bold text-[#0f172a] tracking-tight">
             เข้าสู่ระบบ
           </h1>
-          <span className="text-base font-bold text-[#1d4ed8] mt-1">
+          <span className="text-sm sm:text-base font-bold text-[#1d4ed8] mt-0.5 sm:mt-1">
             ระบบบริหารจัดการครุภัณฑ์
           </span>
-          <span className="text-xs text-slate-500 mt-0.5">
+          <span className="text-[11px] sm:text-xs text-slate-500 mt-0.5">
             คณะวิศวกรรมศาสตร์และเทคโนโลยีอุตสาหกรรม
           </span>
         </div>
 
-        <div className="h-px w-full bg-slate-100 mb-6" />
+        <div className="h-px w-full bg-slate-100 mb-5 sm:mb-6" />
 
         {error && (
           <div className="mb-5 p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium flex items-start gap-2" role="alert">
