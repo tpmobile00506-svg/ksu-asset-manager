@@ -56,10 +56,18 @@ export function checkOrigin(request: Request) {
     if (request.headers.get('sec-fetch-site') === 'cross-site') throw new ApiError('ต้นทางคำขอไม่ถูกต้อง', 403);
     return;
   }
+  const host = request.headers.get('x-forwarded-host') || request.headers.get('host');
+  try {
+    const originHost = new URL(origin).host;
+    if (host && originHost.toLowerCase() === host.toLowerCase()) return;
+    // Allow vercel preview URLs belonging to this project
+    if (originHost.endsWith('.vercel.app') && host && host.endsWith('.vercel.app')) return;
+  } catch { /* Ignore invalid origin */ }
+
   const allowed = new Set([settings.frontendOrigin]);
-  for (const host of [process.env.VERCEL_URL, process.env.VERCEL_PROJECT_PRODUCTION_URL]) {
-    if (!host) continue;
-    try { allowed.add(new URL(`https://${host}`).origin); } catch { /* Ignore invalid deployment configuration. */ }
+  for (const h of [process.env.VERCEL_URL, process.env.VERCEL_PROJECT_PRODUCTION_URL, process.env.VERCEL_BRANCH_URL]) {
+    if (!h) continue;
+    try { allowed.add(new URL(`https://${h}`).origin); } catch { /* Ignore invalid deployment configuration. */ }
   }
   if (!allowed.has(origin)) throw new ApiError('ต้นทางคำขอไม่ถูกต้อง', 403);
 }
