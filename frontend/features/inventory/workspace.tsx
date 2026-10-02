@@ -407,8 +407,7 @@ export default function Workspace(){
         <header className="topbar">
           <div className="topbar-left">
             <SidebarTrigger className="text-slate-300 hover:text-white hover:bg-slate-800" />
-            <div className="flex items-center gap-2.5 min-w-0">
-              <img src="/logo-faculty.png" alt="โลโก้คณะ" className="w-7 h-7 object-contain rounded-md bg-white p-0.5 shrink-0 shadow-xs" />
+            <div className="flex items-center min-w-0">
               {/* Short title on mobile */}
               <b className="text-white text-xs font-semibold tracking-wide truncate sm:hidden">
                 ระบบครุภัณฑ์ · คณะวิศวกรรมฯ
