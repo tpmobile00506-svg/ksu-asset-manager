@@ -1,6 +1,7 @@
 'use client';
 import {useState,useEffect,useCallback,useRef} from 'react';import {Package,LayoutDashboard,Upload,ArrowLeftRight,QrCode,BarChart3,Users,History,Plus,Search,Download,ChevronRight,ArrowUpDown,FileSpreadsheet,Coins,TriangleAlert,FileCheck2,ArrowRight,LogOut,Pencil,X,Bell,Lock,Eye,EyeOff,Check,Eye as ViewIcon,ScanLine,Wrench,CheckCircle2,ClipboardCheck,Clock} from 'lucide-react';
-import {Button} from '@/components/ui/button';import {Input} from '@/components/ui/input';import {Table,TableHeader,TableBody,TableRow,TableHead,TableCell} from '@/components/ui/table';import {SidebarProvider,Sidebar,SidebarContent,SidebarHeader,SidebarFooter,SidebarMenu,SidebarMenuItem,SidebarMenuButton,SidebarInset,SidebarTrigger,useSidebar} from '@/components/ui/sidebar';import {Skeleton} from '@/components/ui/skeleton';import {Toaster,toast} from 'sonner';
+import {Button} from '@/components/ui/button';import {Input} from '@/components/ui/input';import {Table,TableHeader,TableBody,TableRow,TableHead,TableCell} from '@/components/ui/table';import {SidebarProvider,Sidebar,SidebarContent,SidebarHeader,SidebarFooter,SidebarMenu,SidebarMenuItem,SidebarMenuButton,SidebarInset,SidebarTrigger,useSidebar} from '@/components/ui/sidebar';import {Skeleton} from '@/components/ui/skeleton';
+import {Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription} from '@/components/ui/dialog';import {Toaster,toast} from 'sonner';
 import {Asset,Role,roles,conditions,headers11,money,standardCategories,standardBranches} from '@/shared/domain';import {exportWorkbook,reportHeaders} from '@/frontend/services/excel-export';import {Any,api,Badge,Pick,Empty,Metric,Pager,Activity,getInitials,SESSION_EXPIRED_EVENT,readApiResponse,cancelApiRequests} from '@/frontend/components/common';import {useAssetTools} from '@/frontend/hooks/use-asset-tools';import Editor from './editor';import AssetThumbnail from './asset-thumbnail';import ImportView from '@/frontend/features/imports/import-view';import Operations from '@/frontend/features/operations/operations';import OverviewCharts from './overview-charts';import AssetDetailView from './asset-detail-view';
 import QrScannerModal from '@/frontend/components/qr-scanner-modal';
 import {WorkspaceData} from '@/frontend/types/models';
@@ -98,6 +99,7 @@ export default function Workspace(){
  const [scannerOpen, setScannerOpen] = useState(false);
  const [email, setEmail] = useState(''), [password, setPassword] = useState(''), [loggingIn, setLoggingIn] = useState(false);
  const [showPassword, setShowPassword] = useState(false), [rememberMe, setRememberMe] = useState(false);
+  const [forgotPasswordOpen, setForgotPasswordOpen] = useState(false);
  const [notifOpen, setNotifOpen] = useState(false);
  const notifRef = useRef<HTMLDivElement>(null);
  const hadSession=useRef(false),sessionGeneration=useRef(0),reloadGeneration=useRef(0);
@@ -336,7 +338,7 @@ export default function Workspace(){
             </label>
             <button
               type="button"
-              onClick={() => toast.info('หากลืมรหัสผ่าน กรุณาติดต่อผู้ดูแลระบบ', { description: 'ฝ่ายสารสนเทศและพัสดุ โทร. 043-602053' })}
+              onClick={() => setForgotPasswordOpen(true)}
               className="text-[#2563eb] hover:underline font-bold cursor-pointer"
             >
               ลืมรหัสผ่าน?

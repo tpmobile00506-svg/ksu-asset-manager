@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { QrCode, Search, Plus, CheckCircle2, Clock, AlertTriangle, XCircle, Check, ScanLine } from 'lucide-react';
+import { QrCode, Search, Plus, CheckCircle2, Clock, AlertTriangle, XCircle, Check, ScanLine, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
@@ -16,6 +16,7 @@ import {
 import { toast } from 'sonner';
 import { api, Badge, Empty, Pager, date } from '@/frontend/components/common';
 import type { StocktakeItem, StocktakeResponse, WorkspaceData } from '@/shared/models';
+import { exportStocktakeWorkbook } from '@/frontend/services/excel-export';
 import QrScannerModal from '@/frontend/components/qr-scanner-modal';
 
 export default function StocktakesView({
@@ -208,6 +209,28 @@ export default function StocktakesView({
             <ScanLine size={15} className="mr-1.5" /> สแกน QR Code
           </Button>
 
+          {/* Export Excel Button */}
+          {round && (
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={busy || itemsLoading || loadedRound !== roundId || !items.length}
+              onClick={async () => {
+                try {
+                  toast.info('กำลังสร้างไฟล์ Excel...');
+                  await exportStocktakeWorkbook(round, items);
+                  toast.success('ส่งออกรายงานผลตรวจนับเป็น Excel เรียบร้อยแล้ว');
+                } catch (e: any) {
+                  toast.error(e.message || 'เกิดข้อผิดพลาดในการส่งออก Excel');
+                }
+              }}
+              className="flex-1 sm:flex-initial h-9 px-3 text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border-emerald-200 shadow-xs cursor-pointer"
+              title="ส่งออกรายงานผลการตรวจนับทั้งหมดในรอบนี้เป็นไฟล์ Excel"
+            >
+              <Download size={14} className="mr-1.5 text-emerald-600" /> ส่งออก Excel
+            </Button>
+          )}
+
           {/* Open New Round Button */}
           {editable && (
             <Button
@@ -226,7 +249,12 @@ export default function StocktakesView({
               size="sm"
               disabled={busy || itemsLoading || loadedRound !== roundId || round.checked !== round.total}
               onClick={() => write({ action: 'closeRound', id: round.id })}
-              className="h-9 px-3 text-xs font-bold text-slate-700 hover:text-slate-900 border-slate-300"
+              className="h-9 px-3 text-xs font-bold text-slate-700 hover:text-slate-900 border-slate-300 cursor-pointer disabled:cursor-not-allowed"
+              title={
+                round.checked !== round.total
+                  ? `ต้องตรวจนับให้ครบทุกรายการก่อนปิดรอบ (ยังเหลืออีก ${round.total - round.checked} รายการ)`
+                  : 'ปิดรอบการตรวจนับนี้และสรุปผล'
+              }
             >
               ปิดรอบนี้
             </Button>

@@ -314,6 +314,130 @@ export async function createAssetWorkbook(assets: Asset[]) {
   return w;
 }
 
+
+export async function exportStocktakeWorkbook(
+  round: { name: string; year: number; status: string; checked: number; total: number },
+  items: Array<{
+    code: string;
+    name: string;
+    snapshot: string;
+    result: string;
+    quantity: number | null;
+    notes: string | null;
+    checkedAt: string | null;
+  }>
+) {
+  const ExcelModule = await import('exceljs');
+  const Excel = (ExcelModule as any).default || ExcelModule;
+  const w = new Excel.Workbook();
+  w.creator = 'คณะวิศวกรรมศาสตร์และเทคโนโลยีอุตสาหกรรม มหาวิทยาลัยกาฬสินธุ์';
+
+  const s = w.addWorksheet('ผลการตรวจนับครุภัณฑ์', {
+    views: [{ workbookViewId: 0, showGridLines: true }]
+  });
+
+  s.columns = [
+    { width: 8 },
+    { width: 28 },
+    { width: 45 },
+    { width: 25 },
+    { width: 14 },
+    { width: 14 },
+    { width: 22 },
+    { width: 20 },
+    { width: 30 }
+  ];
+
+  const r1 = s.addRow(['มหาวิทยาลัยกาฬสินธุ์ · คณะวิศวกรรมศาสตร์และเทคโนโลยีอุตสาหกรรม']);
+  s.mergeCells('A1:I1');
+  r1.height = 24;
+  r1.getCell(1).font = { name: 'TH Sarabun New', size: 14, bold: true };
+  r1.getCell(1).alignment = { vertical: 'middle', horizontal: 'center' };
+
+  const r2 = s.addRow([`รายงานผลการตรวจนับครุภัณฑ์: ${round.name} (ปีงบประมาณ ${round.year})`]);
+  s.mergeCells('A2:I2');
+  r2.height = 22;
+  r2.getCell(1).font = { name: 'TH Sarabun New', size: 13, bold: true };
+  r2.getCell(1).alignment = { vertical: 'middle', horizontal: 'center' };
+
+  const todayThai = new Intl.DateTimeFormat('th-TH', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date());
+  const r3 = s.addRow([`สถานะรอบ: ${round.status === 'open' ? 'กำลังตรวจนับ' : 'ปิดรอบแล้ว'} · ตรวจแล้ว ${round.checked}/${round.total} รายการ · ข้อมูล ณ วันที่ ${todayThai}`]);
+  s.mergeCells('A3:I3');
+  r3.height = 20;
+  r3.getCell(1).font = { name: 'TH Sarabun New', size: 11, italic: true };
+  r3.getCell(1).alignment = { vertical: 'middle', horizontal: 'center' };
+
+  const headerCols = [
+    'ลำดับ',
+    'รหัสครุภัณฑ์',
+    'รายการครุภัณฑ์',
+    'สถานที่จัดเก็บ',
+    'จำนวนในระบบ',
+    'ตรวจพบจริง',
+    'ผลการตรวจนับ',
+    'วันที่บันทึกตรวจ',
+    'หมายเหตุ'
+  ];
+  const hRow = s.addRow(headerCols);
+  hRow.height = 24;
+  hRow.eachCell((c: any) => {
+    c.font = { name: 'TH Sarabun New', size: 12, bold: true, color: { argb: 'FFFFFFFF' } };
+    c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E293B' } };
+    c.alignment = { vertical: 'middle', horizontal: 'center' };
+    c.border = { top: { style: 'thin' }, bottom: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' } };
+  });
+
+  const resultMap: Record<string, string> = {
+    normal: 'ตรงตามทะเบียน (ปกติ)',
+    damaged: 'ชำรุด / ส่งซ่อม',
+    missing: 'ไม่พบครุภัณฑ์',
+    mismatch: 'ข้อมูลไม่ตรง',
+    pending: 'ยังไม่ได้ตรวจ'
+  };
+
+  items.forEach((item, idx) => {
+    let snap: any = {};
+    try { snap = JSON.parse(item.snapshot || '{}'); } catch {}
+
+    const row = s.addRow([
+      idx + 1,
+      item.code,
+      item.name,
+      snap.location || '—',
+      snap.quantity ?? 1,
+      item.quantity ?? '—',
+      resultMap[item.result] || item.result || 'ยังไม่ได้ตรวจ',
+      item.checkedAt ? new Date(item.checkedAt).toLocaleString('th-TH') : '—',
+      item.notes || ''
+    ]);
+
+    row.height = 20;
+    row.getCell(1).alignment = { vertical: 'middle', horizontal: 'center' };
+    row.getCell(2).alignment = { vertical: 'middle', horizontal: 'left' };
+    row.getCell(3).alignment = { vertical: 'middle', horizontal: 'left' };
+    row.getCell(4).alignment = { vertical: 'middle', horizontal: 'left' };
+    row.getCell(5).alignment = { vertical: 'middle', horizontal: 'center' };
+    row.getCell(6).alignment = { vertical: 'middle', horizontal: 'center' };
+    row.getCell(7).alignment = { vertical: 'middle', horizontal: 'center' };
+    row.getCell(8).alignment = { vertical: 'middle', horizontal: 'center' };
+    row.getCell(9).alignment = { vertical: 'middle', horizontal: 'left' };
+
+    row.eachCell((c: any) => {
+      c.font = { name: 'TH Sarabun New', size: 11 };
+      c.border = {
+        top: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+        bottom: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+        left: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+        right: { style: 'thin', color: { argb: 'FFE2E8F0' } }
+      };
+    });
+  });
+
+  const safeRoundName = round.name.replace(/[/\\?%*:|"<>]/g, '-');
+  const bytes = await w.xlsx.writeBuffer();
+  save(new Blob([bytes as BlobPart], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), `รายงานผลตรวจนับ-${safeRoundName}-${round.year}.xlsx`);
+}
+
 export async function exportWorkbook(assets: Asset[]) {
   const w = await createAssetWorkbook(assets);
   const bytes = await w.xlsx.writeBuffer();

@@ -747,16 +747,44 @@ export default function RequestsView({
             </DialogHeader>
 
             <div className="space-y-4 my-2 text-xs">
-              <div className="bg-slate-50 rounded-lg p-3 border border-slate-100 space-y-1.5">
-                <div className="flex justify-between">
-                  <span className="text-slate-500">เหตุผลที่ระบุ:</span>
-                  <span className="font-medium text-slate-800">{viewingRequest.reason || '—'}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-500">วันที่ยื่นคำขอ:</span>
-                  <span className="font-medium text-slate-800">{formatThaiDateTime(viewingRequest.createdAt)}</span>
-                </div>
-              </div>
+              {(() => {
+                let p: Record<string, any> = {};
+                try {
+                  p = JSON.parse(viewingRequest.payload || '{}');
+                } catch {}
+
+                return (
+                  <div className="bg-slate-50 rounded-lg p-3 border border-slate-100 space-y-2">
+                    <div className="flex justify-between items-start gap-2">
+                      <span className="text-slate-500 shrink-0">เหตุผลที่ระบุ:</span>
+                      <span className="font-medium text-slate-800 text-right">{viewingRequest.reason || '—'}</span>
+                    </div>
+
+                    {viewingRequest.kind === 'transfer' && (p.location || p.branch) && (
+                      <div className="flex justify-between items-start gap-2 pt-1.5 border-t border-slate-200/70">
+                        <span className="text-slate-500 shrink-0">สถานที่ปลายทาง:</span>
+                        <span className="font-semibold text-blue-700 text-right">
+                          {p.location || '—'} {p.branch ? `(${p.branch})` : ''}
+                        </span>
+                      </div>
+                    )}
+
+                    {viewingRequest.kind === 'repair' && p.estimateSatang !== undefined && (
+                      <div className="flex justify-between items-center gap-2 pt-1.5 border-t border-slate-200/70">
+                        <span className="text-slate-500 shrink-0">ประมาณการค่าซ่อม:</span>
+                        <span className="font-bold text-amber-700 text-right">
+                          ฿{money(p.estimateSatang)} บาท
+                        </span>
+                      </div>
+                    )}
+
+                    <div className="flex justify-between items-center pt-1.5 border-t border-slate-200/70">
+                      <span className="text-slate-500">วันที่ยื่นคำขอ:</span>
+                      <span className="font-medium text-slate-800">{formatThaiDateTime(viewingRequest.createdAt)}</span>
+                    </div>
+                  </div>
+                );
+              })()}
 
               <div>
                 <h4 className="font-semibold text-slate-800 mb-2">สายการอนุมัติ:</h4>

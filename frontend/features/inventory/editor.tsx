@@ -534,10 +534,18 @@ export default function Editor({
                       <p className="mt-1">เหตุผลของผู้ขอ: {modal.request.reason}</p>
                     </div>
                     <label>
-                      <span>หมายเหตุการ{modal.kind === 'approve' ? 'อนุมัติ' : 'ส่งกลับ'}</span>
+                      <span>
+                        หมายเหตุการ{modal.kind === 'approve' ? 'อนุมัติ' : 'ส่งกลับ'}
+                        {modal.kind === 'reject' && <span className="text-rose-600 font-bold ml-1">*</span>}
+                      </span>
                       <Textarea
                         name="reason"
-                        placeholder="ระบุความเห็นหรือเหตุผลเพิ่มเติม (ถ้ามี)"
+                        required={modal.kind === 'reject'}
+                        placeholder={
+                          modal.kind === 'reject'
+                            ? 'ระบุเหตุผลในการส่งกลับคำขอ (จำเป็น เพื่อให้ผู้ยื่นแก้ไข)'
+                            : 'ระบุความเห็นหรือข้อเสนอแนะเพิ่มเติม (ถ้ามี)'
+                        }
                         rows={3}
                       />
                     </label>
