@@ -64,12 +64,12 @@ export const standardBranches = [
   'วิศวกรรมคอมพิวเตอร์ (วค)',
   'วิศวกรรมไฟฟ้า (วฟ)',
   'เทคโนโลยีเครื่องจักรกลเกษตร (คจก)',
-  'วิศวกรรมเครื่องกล (วคม)',
+  'วิศวกรรมเครื่องกล (วคม/วศค)',
   'วิศวกรรมอุตสาหการ (วอ)',
   'วิศวกรรมโยธา/โลจิสติกส์ (วย/วล)',
   'วิศวกรรมเมคคาทรอนิกส์ (มค)',
-  'นวัตกรรมการออกแบบและสถาปัตยกรรม (ออกแบบ)',
-  'สำนักงานคณบดี (ควอ.)',
+  'นวัตกรรมการออกแบบและสถาปัตยกรรม (ออกแบบ/นอส)',
+  'สำนักงานคณะฯ / คณบดี (สนง.ควอ.)',
   'ส่วนกลาง / การศึกษา'
 ] as const;
 
@@ -80,11 +80,11 @@ export function resolveCategory(branch: string, rawOffice?: string): string {
   if (b.includes('คอม') || b.includes('วค') || b.includes('it') || b.includes('computer')) return 'คอมพิวเตอร์';
   if (b.includes('ไฟฟ้า') || b.includes('วฟ') || b.includes('อิเล็ก') || b.includes('electrical')) return 'ไฟฟ้า';
   if (b.includes('เกษตร') || b.includes('คจก') || b.includes('จักรกลเกษตร')) return 'เครื่องจักรกลเกษตร';
-  if (b.includes('เครื่องกล') || b.includes('วคม') || b.includes('ช่างกล') || b.includes('mechanical')) return 'เครื่องกล';
+  if (b.includes('เครื่องกล') || b.includes('วคม') || b.includes('วศค') || b.includes('ช่างกล') || b.includes('mechanical')) return 'เครื่องกล';
   if (b.includes('อุตสาหการ') || b.includes('วอ') || b.includes('การผลิต') || b.includes('โรงงาน') || b.includes('industrial')) return 'อุตสาหการ';
   if (b.includes('โลจิสติก') || b.includes('โยธา') || b.includes('วย') || b.includes('วล') || b.includes('civil') || b.includes('logistics')) return 'โลจิสติกส์และโยธา';
   if (b.includes('เมคคา') || b.includes('มค') || b.includes('หุ่นยนต์') || b.includes('mechatronics')) return 'เมคคาทรอนิกส์';
-  if (b.includes('ออกแบบ') || b.includes('สถาปัตย์') || b.includes('design') || b.includes('arch')) return 'ออกแบบและสถาปัตย์';
+  if (b.includes('ออกแบบ') || b.includes('นอส') || b.includes('สถาปัตย์') || b.includes('design') || b.includes('arch')) return 'ออกแบบและสถาปัตย์';
   if (b.includes('สำนักงาน') || b.includes('ควอ') || b.includes('คณบดี') || b.includes('สนง') || b.includes('ส่วนกลาง') || b.includes('บริหาร')) return 'สำนักงานส่วนกลาง';
 
   if (rawOffice) {
@@ -92,7 +92,7 @@ export function resolveCategory(branch: string, rawOffice?: string): string {
     if (o.includes('คอม')) return 'คอมพิวเตอร์';
     if (o.includes('ไฟฟ้า')) return 'ไฟฟ้า';
     if (o.includes('เกษตร')) return 'เครื่องจักรกลเกษตร';
-    if (o.includes('เครื่องกล')) return 'เครื่องกล';
+    if (o.includes('เครื่องกล') || o.includes('วศค')) return 'เครื่องกล';
     if (o.includes('อุตสาหการ')) return 'อุตสาหการ';
   }
   return 'สำนักงานส่วนกลาง';
@@ -102,15 +102,15 @@ export function normalizeBranch(raw: string, note: string, sheet: string): strin
   // Prefer an explicit department over incidental department names in the notes.
   const identify = (text: string): string | undefined => {
     const alias = (codes: string) => new RegExp('(^|[^\\p{L}\\p{N}])(' + codes + ')(?=$|[^\\p{L}\\p{N}])', 'u').test(text);
-    if (alias('วคม') || /เครื่องกล/.test(text)) return 'วิศวกรรมเครื่องกล (วคม)';
-    if (alias('สนง|สนอ|ควอ') || /สโมสร|คณบดี/.test(text)) return 'สำนักงานคณบดี (ควอ.)';
+    if (alias('วคม|วศค') || /เครื่องกล/.test(text)) return 'วิศวกรรมเครื่องกล (วคม/วศค)';
+    if (alias('สนง|สนอ|ควอ') || /สโมสร|คณบดี/.test(text)) return 'สำนักงานคณะฯ / คณบดี (สนง.ควอ.)';
     if (alias('วฟ') || /ไฟฟ้า/.test(text)) return 'วิศวกรรมไฟฟ้า (วฟ)';
     if (alias('วค') || /คอม/.test(text)) return 'วิศวกรรมคอมพิวเตอร์ (วค)';
     if (alias('วอ') || /อุตสาหการ|การผลิต|ช่างกล/.test(text)) return 'วิศวกรรมอุตสาหการ (วอ)';
     if (alias('วย|วล') || /โลจิสติก|โยธา/.test(text)) return 'วิศวกรรมโยธา/โลจิสติกส์ (วย/วล)';
     if (alias('คจก') || /เกษตร/.test(text)) return 'เทคโนโลยีเครื่องจักรกลเกษตร (คจก)';
     if (alias('มค') || /เมคคา|หุ่นยนต์/.test(text)) return 'วิศวกรรมเมคคาทรอนิกส์ (มค)';
-    if (/ออกแบบ|ออบแบบ|สถาปัตย์/.test(text)) return 'นวัตกรรมการออกแบบและสถาปัตยกรรม (ออกแบบ)';
+    if (alias('นอส') || /ออกแบบ|ออบแบบ|สถาปัตย์/.test(text)) return 'นวัตกรรมการออกแบบและสถาปัตยกรรม (ออกแบบ/นอส)';
   };
   const explicit = raw.trim();
   if (explicit) return identify(explicit) || explicit;
@@ -120,8 +120,8 @@ export function normalizeBranch(raw: string, note: string, sheet: string): strin
   if (sheet === 'ไฟฟ้า') return 'วิศวกรรมไฟฟ้า (วฟ)';
   if (sheet === 'เกษตร') return 'เทคโนโลยีเครื่องจักรกลเกษตร (คจก)';
   if (sheet === 'โรงงาน') return 'วิศวกรรมอุตสาหการ (วอ)';
-  if (sheet === 'สำนักงาน') return 'สำนักงานคณบดี (ควอ.)';
-  if (sheet === 'สำรวจ' || sheet === 'ยานพาหนะ') return 'สำนักงานคณบดี (ควอ.)';
+  if (sheet === 'สำนักงาน') return 'สำนักงานคณะฯ / คณบดี (สนง.ควอ.)';
+  if (sheet === 'สำรวจ' || sheet === 'ยานพาหนะ') return 'สำนักงานคณะฯ / คณบดี (สนง.ควอ.)';
   return 'ส่วนกลาง / การศึกษา';
 }
 export function classify(source:Source):Candidate[]{

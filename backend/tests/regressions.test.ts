@@ -4,12 +4,13 @@ import { classify, normalizeBranch, splitAmounts, type Asset } from '../contract
 import { createAssetWorkbook } from '../../frontend/services/excel-export';
 
 test('explicit branch wins over notes and overlapping abbreviations', () => {
-  assert.equal(normalizeBranch('วคม', 'ห้องคอม', 'สำนักงาน'), 'วิศวกรรมเครื่องกล (วคม)');
-  assert.equal(normalizeBranch('วิศวกรรมเครื่องกล (วคม)', '', 'คอม'), 'วิศวกรรมเครื่องกล (วคม)');
-  assert.equal(normalizeBranch('ควอ.', 'ไฟฟ้า', 'สำนักงาน'), 'สำนักงานคณบดี (ควอ.)');
+  assert.equal(normalizeBranch('วคม', 'ห้องคอม', 'สำนักงาน'), 'วิศวกรรมเครื่องกล (วคม/วศค)');
+  assert.equal(normalizeBranch('วิศวกรรมเครื่องกล (วคม)', '', 'คอม'), 'วิศวกรรมเครื่องกล (วคม/วศค)');
+  assert.equal(normalizeBranch('ควอ.', 'ไฟฟ้า', 'สำนักงาน'), 'สำนักงานคณะฯ / คณบดี (สนง.ควอ.)');
   assert.equal(normalizeBranch('วอ.', '', ''), 'วิศวกรรมอุตสาหการ (วอ)');
   assert.equal(normalizeBranch('วค.', '', ''), 'วิศวกรรมคอมพิวเตอร์ (วค)');
-  assert.equal(normalizeBranch('วศค.', 'คอม', 'คอม'), 'วศค.');
+  assert.equal(normalizeBranch('วศค.', 'คอม', 'คอม'), 'วิศวกรรมเครื่องกล (วคม/วศค)');
+  assert.equal(normalizeBranch('นอส', '', ''), 'นวัตกรรมการออกแบบและสถาปัตยกรรม (ออกแบบ/นอส)');
   assert.equal(normalizeBranch('', 'สาขาวิศวกรรมไฟฟ้า', ''), 'วิศวกรรมไฟฟ้า (วฟ)');
 });
 

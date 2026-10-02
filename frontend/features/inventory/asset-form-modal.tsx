@@ -190,7 +190,7 @@ export default function AssetFormModal({
 
   useEffect(() => {
     if (modal && ['create', 'edit', 'import'].includes(modal.kind)) {
-      const b = modal.asset?.branch || 'สำนักงานคณบดี (ควอ.)';
+      const b = modal.asset?.branch || 'สำนักงานคณะฯ / คณบดี (สนง.ควอ.)';
       const c = modal.asset?.category || resolveCategory(b);
       setBranchInput(b);
       setCategoryInput(c);
@@ -538,7 +538,7 @@ export default function AssetFormModal({
                     <span>สาขาวิชา / หน่วยงาน *</span>
                     <Input
                       name="branch"
-                      defaultValue={modal?.asset?.branch || 'สำนักงานคณบดี (ควอ.)'}
+                      defaultValue={modal?.asset?.branch || 'สำนักงานคณะฯ / คณบดี (สนง.ควอ.)'}
                       onChange={handleBranchChange}
                       list="asset-branch-options"
                       placeholder="เลือกจากรายการหรือพิมพ์ชื่อสาขา"

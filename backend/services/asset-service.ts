@@ -5,7 +5,7 @@ import { ApiError } from './errors';
 import { parseWorkbook } from '../imports/workbook';
 import { readFileBytes, putFile } from '../storage/files';
 import { withAssetImages } from '../storage/asset-image-metadata';
-import { type Asset, type Source, classify, conditions, resolveCategory } from '../contracts/domain';
+import { type Asset, type Source, classify, conditions, resolveCategory, normalizeBranch } from '../contracts/domain';
 import type { SourceViewResponse } from '../contracts/imports';
 import type { StocktakeResponse, WorkspaceData } from '../contracts/models';
 
@@ -36,7 +36,8 @@ export function validated(input: Record<string, unknown>): Partial<Asset> {
     a[key] = n;
   }
   if (!a.code || !a.name) throw new ApiError('กรุณาระบุรหัสและชื่อครุภัณฑ์');
-  if (!a.branch) a.branch = 'สำนักงานคณบดี (ควอ.)';
+  if (!a.branch) a.branch = 'สำนักงานคณะฯ / คณบดี (สนง.ควอ.)';
+  else a.branch = normalizeBranch(a.branch, '', '');
   if (!a.category) a.category = resolveCategory(a.branch);
   if (!a.location) a.location = 'ไม่ระบุสถานที่';
   if (!a.groupName) a.groupName = 'ทั่วไป';
@@ -49,7 +50,7 @@ export function validated(input: Record<string, unknown>): Partial<Asset> {
 }
 export async function dimensions(tx: Transaction, a: Partial<Asset>) {
   const loc = a.location || 'ไม่ระบุสถานที่';
-  const branch = a.branch || 'สำนักงานคณบดี (ควอ.)';
+  const branch = a.branch || 'สำนักงานคณะฯ / คณบดี (สนง.ควอ.)';
   const cat = a.category || resolveCategory(branch);
   const group = a.groupName || 'ทั่วไป';
   await tx.location.createMany({ data: [{ name: loc }], skipDuplicates: true });
@@ -142,7 +143,7 @@ export async function getData(m: Member, url: URL) {
   onlineUserIds.add(m.id);
   const usersWithOnline = users.map(u => ({ ...u, isOnline: onlineUserIds.has(u.id) }));
   return {
-    me: m, assets: await withAssetImages(assets), requests: requests.map(({ asset, ...r }) => ({ ...r, ...asset })),
+    me: m, assets: await withAssetImages(assets.map(a => ({ ...a, branch: normalizeBranch(a.branch || '', '', '') }))), requests: requests.map(({ asset, ...r }) => ({ ...r, ...asset })),
     rounds: rounds.map(({ items, ...r }) => ({ ...r, total: items.length, checked: items.filter(i => i.result !== 'pending').length })),
     users: usersWithOnline, invites, events, imports,
     settings: Object.fromEntries(settings.map(s => [s.key, s.value])), approvals: approvals.map(a => ({ ...a, actorName: actorNames.get(a.actor) || '' })),
