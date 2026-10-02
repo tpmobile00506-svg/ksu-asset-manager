@@ -12,6 +12,7 @@ const nextConfig: NextConfig = {
   outputFileTracingRoot: repoRoot,
   turbopack: { root: repoRoot },
   poweredByHeader: false,
+  serverExternalPackages: ['sharp'],
 };
 
 export default nextConfig;

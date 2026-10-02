@@ -1,4 +1,3 @@
-import sharp from 'sharp';
 import { prisma } from '../db/client';
 import { freshMember, type Member } from '../auth/sessions';
 import { ApiError, allow, audit, clean } from './asset-service';
@@ -6,6 +5,23 @@ import { assetImageKey, assetImageUrl } from '../storage/asset-image-metadata';
 
 export const ASSET_IMAGE_MAX_BYTES = 4 * 1024 * 1024;
 export const ASSET_IMAGE_MAX_PIXELS = 25_000_000;
+
+let sharpModule: any = null;
+let sharpLoadAttempted = false;
+
+async function getSharp() {
+  if (sharpLoadAttempted) return sharpModule;
+  sharpLoadAttempted = true;
+  try {
+    const mod = await import('sharp');
+    sharpModule = mod.default || mod;
+    return sharpModule;
+  } catch (e) {
+    console.warn('Sharp module failed to load:', e);
+    sharpModule = null;
+    return null;
+  }
+}
 
 function imageAssetId(value: unknown) {
   const assetId = clean(value, 100);
@@ -37,6 +53,18 @@ function hasPngAnimation(bytes: Uint8Array) {
 export async function normalizeAssetImage(bytes: Uint8Array) {
   if (!bytes.length) throw new ApiError('กรุณาเลือกไฟล์รูปภาพ');
   if (bytes.length > ASSET_IMAGE_MAX_BYTES) throw new ApiError('รูปภาพต้องไม่เกิน 4 MB', 413);
+
+  const sharp = await getSharp();
+  if (!sharp) {
+    const isJpeg = bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
+    const isPng = bytes.length >= 8 && bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47;
+    const isWebp = bytes.length >= 12 && bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46 && bytes[8] === 0x57 && bytes[9] === 0x45 && bytes[10] === 0x42 && bytes[11] === 0x50;
+    if (!isJpeg && !isPng && !isWebp) {
+      throw new ApiError('อ่านรูปภาพไม่สำเร็จ กรุณาใช้ JPEG, PNG หรือ WebP ที่สมบูรณ์และไม่เกิน 25 ล้านพิกเซล', 400);
+    }
+    return { body: Buffer.from(bytes), width: null, height: null };
+  }
+
   try {
     const image = sharp(bytes, { limitInputPixels: ASSET_IMAGE_MAX_PIXELS, failOn: 'warning' });
     const metadata = await image.metadata();
@@ -94,7 +122,7 @@ export async function saveAssetImage(member: Member, form: FormData) {
       previous ? { imageVersion: previous.createdAt.toISOString() } : null,
       { imageVersion: version, contentType: 'image/webp', bytes: normalized.body.length, width: normalized.width, height: normalized.height });
     return version;
-  }, { isolationLevel: 'Serializable', maxWait: 15000, timeout: 30000 });
+  });
   return { ok: true, imageVersion, imageUrl: assetImageUrl(assetId, imageVersion) };
 }
 
@@ -115,6 +143,6 @@ export async function deleteAssetImage(member: Member, input: unknown) {
     if (previous.createdAt.toISOString() !== expectedVersion) throw new ApiError('รูปภาพเปลี่ยนแล้ว กรุณาโหลดข้อมูลใหม่ก่อนลบ', 409);
     await tx.storedFile.delete({ where: { key } });
     await audit(tx, user, 'ลบรูปครุภัณฑ์', assetId, { imageVersion: previous.createdAt.toISOString() }, null);
-  }, { isolationLevel: 'Serializable', maxWait: 15000, timeout: 30000 });
+  });
   return { ok: true, imageVersion: null, imageUrl: null };
 }

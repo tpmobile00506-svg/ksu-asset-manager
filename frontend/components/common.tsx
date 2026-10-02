@@ -29,7 +29,11 @@ export async function readApiResponse(response: Response): Promise<Any> {
     data = await response.json();
     if (!data || typeof data !== 'object' || Array.isArray(data)) throw new Error('Expected an object');
   } catch {
-    const error = new Error(response.ok ? 'เซิร์ฟเวอร์ส่งข้อมูลไม่ถูกต้อง กรุณาลองใหม่' : 'ไม่สามารถเชื่อมต่อได้ กรุณาลองใหม่') as Error & { status: number };
+    let msg = 'ไม่สามารถเชื่อมต่อได้ กรุณาลองใหม่';
+    if (response.status === 413) msg = 'ขนาดไฟล์เกินกำหนด (สูงสุด 4 MB)';
+    else if (response.status === 504 || response.status === 502) msg = 'การเชื่อมต่อหมดเวลา กรุณาลองใหม่';
+    else if (response.status >= 500) msg = 'เซิร์ฟเวอร์ขัดข้อง กรุณาลองใหม่อีกครั้ง';
+    const error = new Error(response.ok ? 'เซิร์ฟเวอร์ส่งข้อมูลไม่ถูกต้อง กรุณาลองใหม่' : msg) as Error & { status: number };
     error.status = response.ok ? 502 : response.status;
     throw error;
   }
