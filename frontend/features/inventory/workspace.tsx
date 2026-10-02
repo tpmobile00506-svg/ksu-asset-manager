@@ -1,5 +1,5 @@
 'use client';
-import {useState,useEffect,useCallback,useRef} from 'react';import {Package,LayoutDashboard,Upload,ArrowLeftRight,QrCode,BarChart3,Users,History,Plus,Search,Download,ChevronRight,ArrowUpDown,FileSpreadsheet,Coins,TriangleAlert,FileCheck2,ArrowRight,LogOut,Pencil,X,Bell,Lock,Eye,EyeOff,Check,Eye as ViewIcon,ScanLine} from 'lucide-react';
+import {useState,useEffect,useCallback,useRef} from 'react';import {Package,LayoutDashboard,Upload,ArrowLeftRight,QrCode,BarChart3,Users,History,Plus,Search,Download,ChevronRight,ArrowUpDown,FileSpreadsheet,Coins,TriangleAlert,FileCheck2,ArrowRight,LogOut,Pencil,X,Bell,Lock,Eye,EyeOff,Check,Eye as ViewIcon,ScanLine,Wrench,CheckCircle2,ClipboardCheck,Clock} from 'lucide-react';
 import {Button} from '@/components/ui/button';import {Input} from '@/components/ui/input';import {Table,TableHeader,TableBody,TableRow,TableHead,TableCell} from '@/components/ui/table';import {SidebarProvider,Sidebar,SidebarContent,SidebarHeader,SidebarFooter,SidebarMenu,SidebarMenuItem,SidebarMenuButton,SidebarInset,SidebarTrigger,useSidebar} from '@/components/ui/sidebar';import {Skeleton} from '@/components/ui/skeleton';import {Toaster,toast} from 'sonner';
 import {Asset,Role,roles,conditions,headers11,money,standardCategories,standardBranches} from '@/shared/domain';import {exportWorkbook,reportHeaders} from '@/frontend/services/excel-export';import {Any,api,Badge,Pick,Empty,Metric,Pager,Activity,getInitials,SESSION_EXPIRED_EVENT,readApiResponse,cancelApiRequests} from '@/frontend/components/common';import {useAssetTools} from '@/frontend/hooks/use-asset-tools';import Editor from './editor';import AssetThumbnail from './asset-thumbnail';import ImportView from '@/frontend/features/imports/import-view';import Operations from '@/frontend/features/operations/operations';import OverviewCharts from './overview-charts';import AssetDetailView from './asset-detail-view';
 import QrScannerModal from '@/frontend/components/qr-scanner-modal';
@@ -97,13 +97,16 @@ export default function Workspace(){
  const [modal,setModal]=useState<Any|null>(null),[selected,setSelected]=useState<Asset|null>(null),[formError,setFormError]=useState(''),[revision,setRevision]=useState(0);
  const [scannerOpen, setScannerOpen] = useState(false);
  const [email, setEmail] = useState(''), [password, setPassword] = useState(''), [loggingIn, setLoggingIn] = useState(false);
- const [showPassword, setShowPassword] = useState(false), [rememberMe, setRememberMe] = useState(true);
+ const [showPassword, setShowPassword] = useState(false), [rememberMe, setRememberMe] = useState(false);
+ const [notifOpen, setNotifOpen] = useState(false);
+ const notifRef = useRef<HTMLDivElement>(null);
  const hadSession=useRef(false),sessionGeneration=useRef(0),reloadGeneration=useRef(0);
  const clearSession=useCallback(()=>{
    const expired=hadSession.current;
    sessionGeneration.current++;reloadGeneration.current++;cancelApiRequests();hadSession.current=false;
    setData(null);setModal(null);setSelected(null);setPassword('');setView('overview');setBusy(false);setLoading(false);
    setSearch('');setBranch('all');setCondition('all');setCategory('all');setLifecycle('active');setPage(0);setSelectedAssetIds([]);
+   setNotifOpen(false);
    if(expired)setError('หมดเวลาเข้าใช้งาน กรุณาเข้าสู่ระบบอีกครั้ง');
  },[]);
  const reload=useCallback(async()=>{
@@ -115,6 +118,23 @@ export default function Workspace(){
  },[clearSession]);
  useEffect(()=>{window.addEventListener(SESSION_EXPIRED_EVENT,clearSession);return()=>window.removeEventListener(SESSION_EXPIRED_EVENT,clearSession);},[clearSession]);
  useEffect(()=>{const refreshOnFocus=()=>{if(hadSession.current)void reload();};window.addEventListener('focus',refreshOnFocus);return()=>window.removeEventListener('focus',refreshOnFocus);},[reload]);
+ useEffect(() => {
+   if (!notifOpen) return;
+   const handleClickOutside = (e: MouseEvent) => {
+     if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
+       setNotifOpen(false);
+     }
+   };
+   const handleKeyDown = (e: KeyboardEvent) => {
+     if (e.key === 'Escape') setNotifOpen(false);
+   };
+   document.addEventListener('mousedown', handleClickOutside);
+   document.addEventListener('keydown', handleKeyDown);
+   return () => {
+     document.removeEventListener('mousedown', handleClickOutside);
+     document.removeEventListener('keydown', handleKeyDown);
+   };
+ }, [notifOpen]);
  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     sessionGeneration.current++;cancelApiRequests();
@@ -250,7 +270,7 @@ export default function Workspace(){
           </div>
         )}
 
-        <form onSubmit={handleLogin} className="space-y-4">
+        <form onSubmit={handleLogin} className="space-y-4" autoComplete="off">
           <div>
             <label htmlFor="login-email" className="block text-xs font-bold text-slate-700 mb-1.5">
               อีเมล / บัญชีผู้ใช้งาน
@@ -262,11 +282,11 @@ export default function Workspace(){
               <Input
                 id="login-email"
                 name="email"
-                autoComplete="username"
+                autoComplete="off"
                 type="email"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
-                placeholder="staff@ksu.ac.th"
+                placeholder="กรอกอีเมลหรือชื่อบัญชีผู้ใช้งาน"
                 className="pl-10 h-11 bg-slate-50/70 border-slate-300 text-sm focus:bg-white transition-colors"
                 required
               />
@@ -285,11 +305,11 @@ export default function Workspace(){
                 id="login-password"
                 name="password"
                 aria-label="รหัสผ่าน"
-                autoComplete="current-password"
+                autoComplete="new-password"
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={e => setPassword(e.target.value)}
-                placeholder="••••••••••••"
+                placeholder="กรอกรหัสผ่าน"
                 className="pl-10 pr-10 h-11 bg-slate-50/70 border-slate-300 text-sm focus:bg-white transition-colors tracking-wide"
                 required
               />
@@ -399,23 +419,238 @@ export default function Workspace(){
               </b>
             </div>
           </div>
-          <div className="flex items-center gap-3 shrink-0">
-            <button 
-              type="button" 
-              className="w-8 h-8 rounded-full bg-slate-800/80 hover:bg-slate-700 flex items-center justify-center text-slate-300 transition-colors"
-              title="การแจ้งเตือน"
-            >
-              <Bell size={15} />
-            </button>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={handleLogout} 
-              className="h-8 px-3 text-xs bg-slate-800 text-slate-200 hover:bg-rose-900/60 hover:text-rose-200 border border-slate-700/50 cursor-pointer"
-            >
-              <LogOut size={13} className="mr-1.5" /> ออกจากระบบ
-            </Button>
-          </div>
+          {(() => {
+            const pendingRequests = data.requests?.filter((r: Any) => r.status === 'pending') || [];
+            const openRounds = data.rounds?.filter((r: Any) => r.status === 'open') || [];
+            const totalNotifications = pendingRequests.length + openRounds.length;
+
+            return (
+              <div className="flex items-center gap-3 shrink-0">
+                {/* Notification Bell with Dropdown */}
+                <div className="relative" ref={notifRef}>
+                  <button 
+                    type="button" 
+                    onClick={() => setNotifOpen(prev => !prev)}
+                    className={`relative w-8 h-8 rounded-full flex items-center justify-center transition-colors cursor-pointer ${
+                      notifOpen 
+                        ? 'bg-blue-600 text-white shadow-md shadow-blue-500/30' 
+                        : 'bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white'
+                    }`}
+                    title={`การแจ้งเตือน (${totalNotifications} รายการ)`}
+                    aria-label="การแจ้งเตือน"
+                    aria-expanded={notifOpen}
+                  >
+                    <Bell size={15} />
+                    {totalNotifications > 0 && (
+                      <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-rose-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-[#0f172a] shadow-sm animate-pulse">
+                        {totalNotifications > 99 ? '99+' : totalNotifications}
+                      </span>
+                    )}
+                  </button>
+
+                  {/* Notification Popover Dropdown */}
+                  {notifOpen && (
+                    <div 
+                      className="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-xl shadow-2xl border border-slate-200 text-slate-800 z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150"
+                      role="dialog"
+                      aria-label="กล่องแจ้งเตือน"
+                    >
+                      {/* Header */}
+                      <div className="flex items-center justify-between px-4 py-3 bg-slate-50 border-b border-slate-200">
+                        <div className="flex items-center gap-2">
+                          <Bell size={15} className="text-blue-600" />
+                          <span className="font-semibold text-xs text-slate-800">ศูนย์แจ้งเตือน</span>
+                          {totalNotifications > 0 ? (
+                            <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-rose-100 text-rose-700 border border-rose-200">
+                              {totalNotifications} ค้างดำเนินการ
+                            </span>
+                          ) : (
+                            <span className="px-2 py-0.5 text-[10px] font-medium rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">
+                              เป็นปัจจุบัน
+                            </span>
+                          )}
+                        </div>
+                        <button 
+                          type="button" 
+                          onClick={() => setNotifOpen(false)}
+                          className="text-slate-400 hover:text-slate-600 p-1 rounded-md transition-colors cursor-pointer"
+                          title="ปิด"
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+
+                      {/* Body List */}
+                      <div className="max-h-[360px] overflow-y-auto divide-y divide-slate-100">
+                        {totalNotifications === 0 ? (
+                          <div className="py-8 px-4 text-center">
+                            <div className="w-10 h-10 mx-auto rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mb-2">
+                              <CheckCircle2 size={20} />
+                            </div>
+                            <p className="text-xs font-semibold text-slate-700">ไม่มีรายการแจ้งเตือนค้าง</p>
+                            <p className="text-[11px] text-slate-500 mt-0.5">คำขอและการตรวจนับทั้งหมดได้รับการจัดการเรียบร้อยแล้ว</p>
+                          </div>
+                        ) : (
+                          <>
+                            {/* Pending Requests Section */}
+                            {pendingRequests.length > 0 && (
+                              <div className="p-2">
+                                <div className="px-2 py-1 text-[11px] font-bold text-slate-600 flex items-center justify-between">
+                                  <span>คำขอที่รอการดำเนินการ ({pendingRequests.length})</span>
+                                </div>
+                                <div className="space-y-1 mt-1">
+                                  {pendingRequests.slice(0, 5).map((r: Any) => {
+                                    const kindLabel = 
+                                      r.kind === 'transfer' ? 'คำขอโอนย้าย' :
+                                      r.kind === 'repair' ? 'แจ้งส่งซ่อม' :
+                                      r.kind === 'dispose' || r.kind === 'disposal' ? 'ขอจำหน่าย' : 'คำขอ';
+                                    const IconComp = 
+                                      r.kind === 'transfer' ? ArrowLeftRight :
+                                      r.kind === 'repair' ? Wrench :
+                                      TriangleAlert;
+                                    const badgeColor = 
+                                      r.kind === 'transfer' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                                      r.kind === 'repair' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                                      'bg-rose-50 text-rose-700 border-rose-200';
+                                    const dateInfo = formatImportDate(r.createdAt);
+
+                                    return (
+                                      <div
+                                        key={r.id}
+                                        onClick={() => {
+                                          setSelected(null);
+                                          setView('requests');
+                                          setNotifOpen(false);
+                                        }}
+                                        className="p-2.5 rounded-lg hover:bg-slate-50 border border-transparent hover:border-slate-200 cursor-pointer transition-all"
+                                      >
+                                        <div className="flex items-start gap-2.5">
+                                          <div className={`w-7 h-7 rounded-md flex items-center justify-center shrink-0 border ${badgeColor}`}>
+                                            <IconComp size={13} />
+                                          </div>
+                                          <div className="flex-1 min-w-0">
+                                            <div className="flex items-center justify-between gap-1 mb-0.5">
+                                              <span className="text-[11px] font-semibold text-slate-800 truncate">
+                                                {r.code || 'คำขอ'}
+                                              </span>
+                                              <span className={`text-[9px] px-1.5 py-0.2 rounded font-medium border ${badgeColor}`}>
+                                                {kindLabel}
+                                              </span>
+                                            </div>
+                                            <p className="text-[11px] text-slate-600 truncate font-medium">
+                                              {r.name || 'ไม่มีชื่อรายการ'}
+                                            </p>
+                                            <div className="flex items-center justify-between text-[10px] text-slate-400 mt-1">
+                                              <span className="truncate max-w-[180px]">
+                                                {r.reason ? `เหตุผล: ${r.reason}` : 'รอการพิจารณา'}
+                                              </span>
+                                              <span className="shrink-0 flex items-center gap-1">
+                                                <Clock size={10} />
+                                                {dateInfo.sub || dateInfo.main}
+                                              </span>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                  {pendingRequests.length > 5 && (
+                                    <button
+                                      type="button"
+                                      onClick={() => { setSelected(null); setView('requests'); setNotifOpen(false); }}
+                                      className="w-full text-center py-1.5 text-[11px] text-blue-600 hover:text-blue-700 font-semibold cursor-pointer"
+                                    >
+                                      ดูคำขอที่รอทั้งหมด ({pendingRequests.length} รายการ) →
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Open Stocktake Rounds Section */}
+                            {openRounds.length > 0 && (
+                              <div className="p-2 bg-slate-50/50">
+                                <div className="px-2 py-1 text-[11px] font-bold text-slate-600 flex items-center justify-between">
+                                  <span>รอบการตรวจนับที่เปิดอยู่ ({openRounds.length})</span>
+                                </div>
+                                <div className="space-y-1 mt-1">
+                                  {openRounds.map((round: Any) => {
+                                    const progress = round.total > 0 ? Math.round((round.checked / round.total) * 100) : 0;
+                                    return (
+                                      <div
+                                        key={round.id}
+                                        onClick={() => {
+                                          setSelected(null);
+                                          setView('stocktakes');
+                                          setNotifOpen(false);
+                                        }}
+                                        className="p-2.5 rounded-lg bg-white hover:bg-slate-100/70 border border-slate-200 cursor-pointer transition-all"
+                                      >
+                                        <div className="flex items-start gap-2.5">
+                                          <div className="w-7 h-7 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center justify-center shrink-0">
+                                            <ClipboardCheck size={14} />
+                                          </div>
+                                          <div className="flex-1 min-w-0">
+                                            <div className="flex items-center justify-between gap-1 mb-0.5">
+                                              <span className="text-[11px] font-semibold text-slate-800 truncate">
+                                                {round.name || `รอบตรวจนับปี ${round.year}`}
+                                              </span>
+                                              <span className="text-[9px] px-1.5 py-0.2 rounded font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                                กำลังนับ {progress}%
+                                              </span>
+                                            </div>
+                                            <p className="text-[10px] text-slate-500">
+                                              ตรวจนับแล้ว {round.checked} / {round.total} รายการ
+                                            </p>
+                                            <div className="w-full bg-slate-200 rounded-full h-1.5 mt-1.5 overflow-hidden">
+                                              <div
+                                                className="bg-emerald-500 h-1.5 rounded-full transition-all"
+                                                style={{ width: `${Math.min(100, progress)}%` }}
+                                              />
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            )}
+                          </>
+                        )}
+                      </div>
+
+                      {/* Footer */}
+                      <div className="p-2 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-xs gap-2">
+                        <button
+                          type="button"
+                          onClick={() => { setSelected(null); setView('requests'); setNotifOpen(false); }}
+                          className="flex-1 text-center py-1.5 px-2 rounded-md bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 font-medium text-[11px] transition-colors cursor-pointer"
+                        >
+                          คำขอและโอนย้าย
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => { setSelected(null); setView('stocktakes'); setNotifOpen(false); }}
+                          className="flex-1 text-center py-1.5 px-2 rounded-md bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 font-medium text-[11px] transition-colors cursor-pointer"
+                        >
+                          ตรวจนับประจำปี
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={handleLogout} 
+                  className="h-8 px-3 text-xs bg-slate-800 text-slate-200 hover:bg-rose-900/60 hover:text-rose-200 border border-slate-700/50 cursor-pointer"
+                >
+                  <LogOut size={13} className="mr-1.5" /> ออกจากระบบ
+                </Button>
+              </div>
+            );
+          })()}
         </header>
   <main className="workspace">
     {selected ? (
