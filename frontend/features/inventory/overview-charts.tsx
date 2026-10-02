@@ -22,10 +22,10 @@ interface OverviewChartsProps {
 
 // สีสถานะตามข้อกำหนด โดยเฉพาะ ชำรุด/รอจำหน่าย ให้เป็นสีเทา (#64748b)
 const STATUS_COLORS = {
-  normal: '#ef4444',    // สีแดงคอรัล ปกติ/พร้อมใช้
+  normal: '#10b981',    // สีเขียวมรกต ปกติ/พร้อมใช้
   repair: '#f59e0b',    // สีเหลือง/ส้ม ส่งซ่อมบำรุง
   borrowed: '#3b82f6',  // สีน้ำเงิน ยืมใช้งานชั่วคราว
-  damaged: '#64748b'    // สีเทา ชำรุด/รอจำหน่าย (ตามที่ผู้ใช้กำหนด)
+  damaged: '#64748b'    // สีเทา ชำรุด/รอจำหน่าย
 };
 
 function formatBranchShort(name: string): string {
@@ -151,7 +151,7 @@ export default function OverviewCharts({ assets, onSelectBranch }: OverviewChart
                         return (
                           <div className="bg-white border border-slate-200 rounded-lg p-2.5 shadow-md text-xs">
                             <p className="font-semibold text-slate-800">{item.fullName || item.name}</p>
-                            <p className="text-red-500 font-bold mt-1">
+                            <p className="text-blue-600 font-bold mt-1">
                               จำนวน: {item.count.toLocaleString()} ชิ้น
                             </p>
                           </div>
@@ -162,7 +162,7 @@ export default function OverviewCharts({ assets, onSelectBranch }: OverviewChart
                   />
                   <Bar
                     dataKey="count"
-                    fill={STATUS_COLORS.normal}
+                    fill="#2563eb"
                     radius={[5, 5, 0, 0]}
                     maxBarSize={48}
                     className="cursor-pointer transition-opacity hover:opacity-90"
@@ -170,7 +170,7 @@ export default function OverviewCharts({ assets, onSelectBranch }: OverviewChart
                       <text
                         x={Number(x) + Number(width) / 2}
                         y={Number(y) - 8}
-                        fill="#ef4444"
+                        fill="#2563eb"
                         textAnchor="middle"
                         fontSize={13}
                         fontWeight={600}

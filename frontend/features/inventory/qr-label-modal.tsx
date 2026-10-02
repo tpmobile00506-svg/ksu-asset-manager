@@ -93,7 +93,7 @@ export default function QrLabelModal({
                 flexShrink: 0
               }}
             />
-            <span>มหาวิทยาลัยกาฬสินธุ์ · วทอ.</span>
+            <span>มหาวิทยาลัยกาฬสินธุ์ · ควอ.</span>
           </div>
           <img src={x.url} alt={'QR ' + x.a.code} />
           <b>{x.a.code}</b>
