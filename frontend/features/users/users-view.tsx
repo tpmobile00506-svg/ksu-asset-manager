@@ -73,6 +73,7 @@ export default function UsersView({
 }) {
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
 
   if (data.me.role !== 'admin') return null;
 
@@ -98,9 +99,14 @@ export default function UsersView({
       const matchSearch =
         (u.name + ' ' + u.email).toLowerCase().includes(search.toLowerCase());
       const matchRole = roleFilter === 'all' || u.role === roleFilter;
-      return matchSearch && matchRole;
+      const isActive = Boolean(u.active ?? 1);
+      const matchStatus =
+        statusFilter === 'all' ||
+        (statusFilter === 'active' && isActive) ||
+        (statusFilter === 'inactive' && !isActive);
+      return matchSearch && matchRole && matchStatus;
     });
-  }, [combinedUsers, search, roleFilter]);
+  }, [combinedUsers, search, roleFilter, statusFilter]);
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
@@ -165,6 +171,20 @@ export default function UsersView({
               ))}
             </select>
           </div>
+
+          {/* Status Filter */}
+          <div className="flex items-center gap-1.5 text-xs text-slate-700 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200">
+            <span className="font-bold">สถานะ:</span>
+            <select
+              value={statusFilter}
+              onChange={e => setStatusFilter(e.target.value)}
+              className="bg-transparent font-medium text-slate-900 border-none outline-none cursor-pointer"
+            >
+              <option value="all">สถานะทั้งหมด</option>
+              <option value="active">เปิดใช้งาน</option>
+              <option value="inactive">ระงับการใช้งาน</option>
+            </select>
+          </div>
         </div>
 
         <Button
@@ -198,7 +218,7 @@ export default function UsersView({
               <TableRow className="bg-slate-50/70 text-slate-600 text-xs">
                 <TableHead className="font-bold">ผู้ใช้งาน</TableHead>
                 <TableHead className="font-bold">บทบาทและสิทธิ์</TableHead>
-                <TableHead className="font-bold text-center">สถานะ</TableHead>
+                <TableHead className="font-bold text-center">สถานะบัญชี</TableHead>
                 <TableHead className="font-bold text-right w-[120px]">จัดการ</TableHead>
               </TableRow>
             </TableHeader>
@@ -207,6 +227,7 @@ export default function UsersView({
                 const roleKey = u.role as Role;
                 const meta = roleMeta[roleKey] || roleMeta.staff;
                 const initials = getInitials(u.name || u.email || 'U');
+                const isActive = Boolean(u.active ?? 1);
 
                 return (
                   <TableRow key={u.id} className="hover:bg-slate-50/60 transition-colors">
@@ -235,15 +256,15 @@ export default function UsersView({
                     </TableCell>
 
                     <TableCell className="text-center whitespace-nowrap">
-                      {u.isOnline ? (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-2xs">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                          ออนไลน์
+                      {isActive ? (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-2xs">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                          เปิดใช้งาน
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-500 border border-slate-200">
-                          <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
-                          ออฟไลน์
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200 shadow-2xs">
+                          <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+                          ระงับการใช้งาน
                         </span>
                       )}
                     </TableCell>
